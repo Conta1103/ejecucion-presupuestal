@@ -1,245 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ejecución Presupuestal SIIF</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
 <style>
 :root {
-  --bg: #F7F8FA; --fg: #1A1D26; --surface: #FFFFFF; --surface-alt: #EEF0F4;
-  --border: #D4D8E1; --muted: #6B7280;
-  --accent: #1B4F72; --accent-light: #D6EAF8;
-  --gold: #C9A84C; --gold-light: #FDF6E3;
-  --sem-verde: #27AE60; --sem-verde-bg: #E8F8F0;
-  --sem-amarillo: #F39C12; --sem-amarillo-bg: #FEF5E7;
-  --sem-rojo: #E74C3C; --sem-rojo-bg: #FDEDEC;
-  --sem-azul: #2980B9; --sem-azul-bg: #EBF5FB;
+  --sidebar-w: 260px;
+  --sidebar-bg: #0E2A3F;
+  --sidebar-hover: #163D5C;
+  --sidebar-active: rgba(201,168,76,0.15);
+  --sidebar-text: #A8C4D8;
+  --sidebar-text-active: #FFFFFF;
+  --bg: #F0F3F7;
+  --fg: #1A1D26;
+  --surface: #FFFFFF;
+  --surface-alt: #EEF0F4;
+  --border: #D4D8E1;
+  --muted: #6B7280;
+  --accent: #1B4F72;
+  --accent-light: #D6EAF8;
+  --gold: #C9A84C;
+  --gold-light: #FDF6E3;
+  --blue: #2980B9;
+  --sem-verde: #27AE60;
+  --sem-verde-bg: #E8F8F0;
+  --sem-amarillo: #F39C12;
+  --sem-amarillo-bg: #FEF5E7;
+  --sem-rojo: #E74C3C;
+  --sem-rojo-bg: #FDEDEC;
+  --sem-azul: #2980B9;
+  --sem-azul-bg: #EBF5FB;
   --font-display: 'DM Serif Display', Georgia, serif;
-  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
-  --radius: 8px; --shadow: 0 1px 3px rgba(0,0,0,0.06);
-  --row-l1: var(--accent); --row-l1-bg: var(--accent-light); --row-l2-bg: rgba(27,79,114,0.04);
+  --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,0.06);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.08);
+  --row-l1: var(--accent);
+  --row-l1-bg: var(--accent-light);
+  --row-l2-bg: rgba(27,79,114,0.04);
 }
+
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0D1117; --fg: #E4E6EB; --surface: #161B22; --surface-alt: #21262D;
-    --border: #30363D; --muted: #8B949E;
-    --accent: #58A6FF; --accent-light: #161B22;
-    --gold: #D4A843; --gold-light: #1C1A12;
-    --sem-verde: #3FB950; --sem-verde-bg: #0D1F12;
-    --sem-amarillo: #D29922; --sem-amarillo-bg: #2A1F0A;
-    --sem-rojo: #F85149; --sem-rojo-bg: #2A0E0E;
-    --sem-azul: #58A6FF; --sem-azul-bg: #0D1B2E;
-    --shadow: 0 1px 3px rgba(0,0,0,0.4);
-    --row-l1: #58A6FF; --row-l1-bg: #0D1B2E; --row-l2-bg: rgba(88,166,255,0.04);
+    --sidebar-bg: #07141F;
+    --sidebar-hover: #0E2A3F;
+    --bg: #0D1117;
+    --fg: #E4E6EB;
+    --surface: #161B22;
+    --surface-alt: #21262D;
+    --border: #30363D;
+    --muted: #8B949E;
+    --accent: #58A6FF;
+    --accent-light: #0D1B2E;
+    --gold: #D4A843;
+    --gold-light: #1C1A12;
+    --sem-verde: #3FB950;
+    --sem-verde-bg: #0D1F12;
+    --sem-amarillo: #D29922;
+    --sem-amarillo-bg: #2A1F0A;
+    --sem-rojo: #F85149;
+    --sem-rojo-bg: #2A0E0E;
+    --sem-azul: #58A6FF;
+    --sem-azul-bg: #0D1B2E;
+    --shadow: 0 2px 8px rgba(0,0,0,0.3);
+    --shadow-lg: 0 4px 20px rgba(0,0,0,0.4);
+    --row-l1: #58A6FF;
+    --row-l1-bg: #0D1B2E;
+    --row-l2-bg: rgba(88,166,255,0.04);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0D1117; --fg: #E4E6EB; --surface: #161B22; --surface-alt: #21262D;
-  --border: #30363D; --muted: #8B949E;
-  --accent: #58A6FF; --accent-light: #161B22;
-  --gold: #D4A843; --gold-light: #1C1A12;
-  --sem-verde: #3FB950; --sem-verde-bg: #0D1F12;
-  --sem-amarillo: #D29922; --sem-amarillo-bg: #2A1F0A;
-  --sem-rojo: #F85149; --sem-rojo-bg: #2A0E0E;
-  --sem-azul: #58A6FF; --sem-azul-bg: #0D1B2E;
-  --shadow: 0 1px 3px rgba(0,0,0,0.4);
-  --row-l1: #58A6FF; --row-l1-bg: #0D1B2E; --row-l2-bg: rgba(88,166,255,0.04);
+  --sidebar-bg: #07141F;
+  --sidebar-hover: #0E2A3F;
+  --bg: #0D1117;
+  --fg: #E4E6EB;
+  --surface: #161B22;
+  --surface-alt: #21262D;
+  --border: #30363D;
+  --muted: #8B949E;
+  --accent: #58A6FF;
+  --accent-light: #0D1B2E;
+  --gold: #D4A843;
+  --gold-light: #1C1A12;
+  --sem-verde: #3FB950;
+  --sem-verde-bg: #0D1F12;
+  --sem-amarillo: #D29922;
+  --sem-amarillo-bg: #2A1F0A;
+  --sem-rojo: #F85149;
+  --sem-rojo-bg: #2A0E0E;
+  --sem-azul: #58A6FF;
+  --sem-azul-bg: #0D1B2E;
+  --shadow: 0 2px 8px rgba(0,0,0,0.3);
+  --shadow-lg: 0 4px 20px rgba(0,0,0,0.4);
+  --row-l1: #58A6FF;
+  --row-l1-bg: #0D1B2E;
+  --row-l2-bg: rgba(88,166,255,0.04);
   color-scheme: dark;
 }
 
+* { box-sizing: border-box; margin: 0; }
+html, body { height: 100%; }
 body {
-  background: var(--bg); color: var(--fg); font-family: var(--font-body);
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-  padding-block: 0; line-height: 1.5; font-variant-numeric: tabular-nums;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  overflow: hidden;
 }
-body::before { content:""; position:fixed; inset:0 0 auto; height:env(safe-area-inset-top,0px); z-index:10; background:var(--accent); }
-* { box-sizing:border-box; margin:0; }
-.app { max-width:1280px; margin:0 auto; display:flex; flex-direction:column; gap:16px; padding-block:20px; }
 
-/* ──── Header with gold institutional stripe ──── */
-.header {
-  background: linear-gradient(135deg, var(--accent) 0%, #154360 100%);
-  color: #fff; padding: 0; border-radius: var(--radius); overflow: hidden;
+/* ═══════ SIDEBAR ═══════ */
+.sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--sidebar-bg);
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: fixed;
+  left: 0; top: 0;
+  z-index: 100;
+  transition: transform 0.3s ease;
+}
+.sidebar-brand {
+  padding: 20px 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-logo {
+  width: 42px; height: 42px;
+  background: linear-gradient(135deg, var(--gold), #E8D48B);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px;
+  color: #1B4F72;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar-brand-text h2 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: #fff;
+  line-height: 1.2;
+}
+.sidebar-brand-text p {
+  font-size: 0.68rem;
+  color: var(--sidebar-text);
+  margin-top: 2px;
+}
+.sidebar-nav {
+  flex: 1;
+  padding: 12px 0;
+  overflow-y: auto;
+}
+.nav-section {
+  padding: 8px 20px 4px;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(168,196,216,0.5);
+}
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: var(--sidebar-text);
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+  font-family: var(--font-body);
   position: relative;
 }
-.header-stripe {
-  height: 4px;
-  background: linear-gradient(90deg, var(--gold) 0%, #E8D48B 40%, var(--gold) 60%, #8B6914 100%);
+.nav-item:hover { background: var(--sidebar-hover); color: #fff; }
+.nav-item.active {
+  background: var(--sidebar-active);
+  color: var(--gold);
+  border-right: 3px solid var(--gold);
 }
-.header-inner { padding: 20px 24px; display:flex; flex-wrap:wrap; align-items:center; gap:14px; }
-.header-icon {
-  width:48px; height:48px; background:rgba(255,255,255,0.12);
-  border-radius:12px; display:flex; align-items:center; justify-content:center;
-  font-size:24px; flex-shrink:0; border: 1px solid rgba(201,168,76,0.3);
+.nav-item .nav-icon {
+  width: 20px; height: 20px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
 }
-.header-text h1 { font-family:var(--font-display); font-size:1.4rem; font-weight:400; text-wrap:balance; }
-.header-text p { font-size:0.8rem; opacity:0.85; margin-top:2px; }
-.header-right { margin-left:auto; display:flex; align-items:center; gap:10px; }
-.header-badge {
-  background:rgba(201,168,76,0.25); border: 1px solid rgba(201,168,76,0.4);
-  padding:4px 12px; border-radius:20px;
-  font-size:0.72rem; font-weight:600; letter-spacing:0.04em; text-transform:uppercase;
-  color: #E8D48B;
+.nav-item .nav-badge {
+  margin-left: auto;
+  background: rgba(201,168,76,0.2);
+  color: var(--gold);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 10px;
+}
+
+/* UE Status in sidebar */
+.sidebar-ue-status {
+  padding: 16px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-ue-status h4 {
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(168,196,216,0.5);
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.ue-status-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 0;
+  font-size: 0.78rem;
+  color: var(--sidebar-text);
+}
+.ue-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.ue-dot.loaded { background: var(--sem-verde); box-shadow: 0 0 6px rgba(39,174,96,0.4); }
+.ue-dot.pending { background: var(--sem-amarillo); opacity: 0.6; }
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: 14px 20px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sidebar-avatar {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--blue), var(--accent));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.sidebar-footer-text {
+  font-size: 0.72rem;
+  color: var(--sidebar-text);
+  line-height: 1.3;
+}
+.sidebar-footer-text strong { color: #fff; font-weight: 600; }
+
+/* Mobile toggle */
+.sidebar-toggle {
+  display: none;
+  position: fixed;
+  top: 12px; left: 12px;
+  z-index: 200;
+  width: 40px; height: 40px;
+  background: var(--sidebar-bg);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-lg);
+}
+
+/* ═══════ MAIN CONTENT ═══════ */
+.main-wrap {
+  margin-left: var(--sidebar-w);
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Top Bar */
+.topbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+.topbar-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--fg);
+}
+.topbar-date {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-left: 8px;
+}
+.topbar-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 .btn-pdf {
-  background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25);
-  color: #fff; padding: 7px 14px; border-radius: 6px; font-size: 0.78rem;
-  font-weight: 600; cursor: pointer; font-family: var(--font-body);
-  display: flex; align-items: center; gap: 6px; transition: all 0.2s;
+  background: linear-gradient(135deg, var(--accent), #154360);
+  border: none;
+  color: #fff;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(27,79,114,0.3);
 }
-.btn-pdf:hover { background: rgba(255,255,255,0.25); }
-.btn-pdf:disabled { opacity: 0.4; cursor: default; }
+.btn-pdf:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,79,114,0.4); }
+.btn-pdf:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
 .btn-pdf svg { width: 14px; height: 14px; }
-
-/* ──── Card / Table / Form ──── */
-.card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
-.card-header { padding:14px 18px; border-bottom:1px solid var(--border); font-weight:600; font-size:0.88rem; display:flex; align-items:center; gap:8px; }
-.card-body { padding:18px; }
-.upload-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
-@media(max-width:700px){.upload-grid{grid-template-columns:1fr;}}
-.upload-slot {
-  border:2px dashed var(--border); border-radius:var(--radius); padding:20px 12px;
-  text-align:center; cursor:pointer; transition:border-color .2s,background .2s;
-  position:relative; min-height:120px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px;
+.topbar-badge {
+  background: var(--gold-light);
+  border: 1px solid rgba(201,168,76,0.3);
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--gold);
 }
-.upload-slot:hover,.upload-slot.dragover{border-color:var(--accent);background:var(--accent-light);}
-.upload-slot.loaded{border-style:solid;border-color:var(--sem-verde);background:var(--sem-verde-bg);}
-.upload-slot .slot-label{font-size:.78rem;font-weight:600;color:var(--fg);}
-.upload-slot .slot-hint{font-size:.72rem;color:var(--muted);}
-.upload-slot .slot-file{font-size:.72rem;color:var(--sem-verde);font-weight:600;}
-.upload-slot .slot-icon{font-size:1.4rem;color:var(--muted);}
-.upload-slot.loaded .slot-icon{color:var(--sem-verde);}
-.upload-slot .slot-remove{position:absolute;top:6px;right:8px;background:none;border:none;cursor:pointer;color:var(--muted);font-size:1rem;line-height:1;padding:2px 5px;border-radius:4px;}
-.upload-slot .slot-remove:hover{background:var(--sem-rojo-bg);color:var(--sem-rojo);}
-input[type="file"]{display:none;}
 
-.unit-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);flex-wrap:wrap;}
-.unit-tab{padding:10px 16px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);white-space:nowrap;}
-.unit-tab:hover{color:var(--fg);}
-.unit-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-.unit-tab .unit-count{font-size:.68rem;background:var(--surface-alt);padding:1px 6px;border-radius:8px;margin-left:4px;}
+/* Scrollable content area */
+.content-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px 40px;
+}
 
-.filters{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;}
-.filter-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:160px;}
-.filter-group label{font-size:.72rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
-.filter-group select{padding:7px 10px;border:1px solid var(--border);border-radius:6px;background:var(--surface);color:var(--fg);font-family:var(--font-body);font-size:.82rem;}
+/* ═══════ SECTIONS (controlled by sidebar nav) ═══════ */
+.section { display: none; }
+.section.active { display: block; }
 
-/* ──── Health Gauge (unique element) ──── */
+/* ═══════ UPLOAD SECTION ═══════ */
+.upload-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+.upload-slot {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 140px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--surface);
+}
+.upload-slot:hover, .upload-slot.dragover { border-color: var(--accent); background: var(--accent-light); }
+.upload-slot.loaded { border-style: solid; border-color: var(--sem-verde); background: var(--sem-verde-bg); }
+.upload-slot .slot-label { font-size: 0.82rem; font-weight: 600; color: var(--fg); }
+.upload-slot .slot-hint { font-size: 0.72rem; color: var(--muted); }
+.upload-slot .slot-file { font-size: 0.72rem; color: var(--sem-verde); font-weight: 600; }
+.upload-slot .slot-icon { font-size: 1.6rem; color: var(--muted); }
+.upload-slot.loaded .slot-icon { color: var(--sem-verde); }
+.upload-slot .slot-remove {
+  position: absolute; top: 8px; right: 10px;
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 1rem; line-height: 1;
+  padding: 2px 5px; border-radius: 4px;
+}
+.upload-slot .slot-remove:hover { background: var(--sem-rojo-bg); color: var(--sem-rojo); }
+input[type="file"] { display: none; }
+
+/* ═══════ CARDS ═══════ */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+.card-header {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  font-weight: 600;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-body { padding: 18px; }
+
+/* ═══════ KPIs ═══════ */
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.kpi-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  box-shadow: var(--shadow);
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.kpi-card.verde::before { background: var(--sem-verde); }
+.kpi-card.amarillo::before { background: var(--sem-amarillo); }
+.kpi-card.rojo::before { background: var(--sem-rojo); }
+.kpi-card.azul::before { background: var(--sem-azul); }
+.kpi-card.health-card {
+  background: linear-gradient(135deg, #0E2A3F, #1B4F72);
+  border-color: rgba(201,168,76,0.3);
+  color: #fff;
+}
+.kpi-card.health-card .kpi-label { color: rgba(255,255,255,0.7); }
+.kpi-card.health-card .kpi-sub { color: rgba(255,255,255,0.6); }
+.kpi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.kpi-icon {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+.kpi-icon.blue { background: var(--sem-azul-bg); color: var(--sem-azul); }
+.kpi-icon.green { background: var(--sem-verde-bg); color: var(--sem-verde); }
+.kpi-icon.yellow { background: var(--sem-amarillo-bg); color: var(--sem-amarillo); }
+.kpi-icon.red { background: var(--sem-rojo-bg); color: var(--sem-rojo); }
+.kpi-icon.gold { background: rgba(201,168,76,0.15); color: var(--gold); }
+.kpi-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  font-weight: 600;
+}
+.kpi-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-top: 2px;
+  line-height: 1.2;
+}
+.kpi-sub {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.kpi-progress {
+  margin-top: 8px;
+  height: 4px;
+  background: var(--surface-alt);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.kpi-progress-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+/* ═══════ GAUGE (Health Index) ═══════ */
 .gauge-card {
   background: linear-gradient(135deg, var(--surface) 0%, var(--surface-alt) 100%);
-  border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
-  padding: 20px; text-align: center; position: relative; overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
 }
 .gauge-card::after {
-  content: ''; position: absolute; inset: 0;
+  content: '';
+  position: absolute;
+  inset: 0;
   background: radial-gradient(ellipse at 50% 0%, rgba(201,168,76,0.06) 0%, transparent 60%);
   pointer-events: none;
 }
-.gauge-title { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
+.gauge-title { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 4px; }
 .gauge-svg { display: block; margin: 0 auto; }
 .gauge-score { font-family: var(--font-display); font-size: 2.2rem; font-weight: 400; margin-top: -8px; }
 .gauge-label { font-size: 0.78rem; font-weight: 600; margin-top: 2px; }
 .gauge-detail { font-size: 0.72rem; color: var(--muted); margin-top: 6px; line-height: 1.7; }
 
-/* ──── KPIs ──── */
-.top-row { display: grid; grid-template-columns: 280px 1fr; gap: 14px; align-items: start; }
-@media(max-width:800px){.top-row{grid-template-columns:1fr;}}
-.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;}
-.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
-.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;}
-.kpi.verde::before{background:var(--sem-verde);}.kpi.amarillo::before{background:var(--sem-amarillo);}.kpi.rojo::before{background:var(--sem-rojo);}.kpi.azul::before{background:var(--sem-azul);}
-.kpi-label{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;}
-.kpi-value{font-size:1.45rem;font-weight:700;margin-top:3px;}
-.kpi-sub{font-size:.75rem;color:var(--muted);margin-top:2px;}
+/* ═══════ DASHBOARD GRID ═══════ */
+.dash-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 18px;
+  margin-top: 20px;
+}
+.dash-main { min-width: 0; }
+.dash-side { display: flex; flex-direction: column; gap: 14px; }
 
-.sem{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:10px;font-size:.72rem;font-weight:600;}
-.sem-verde{background:var(--sem-verde-bg);color:var(--sem-verde);}
-.sem-amarillo{background:var(--sem-amarillo-bg);color:var(--sem-amarillo);}
-.sem-rojo{background:var(--sem-rojo-bg);color:var(--sem-rojo);}
-.sem-azul{background:var(--sem-azul-bg);color:var(--sem-azul);}
-.sem-dot{width:7px;height:7px;border-radius:50%;}
-.sem-verde .sem-dot{background:var(--sem-verde);}.sem-amarillo .sem-dot{background:var(--sem-amarillo);}.sem-rojo .sem-dot{background:var(--sem-rojo);}.sem-azul .sem-dot{background:var(--sem-azul);}
+/* ═══════ UNIT TABS ═══════ */
+.unit-tabs { display: flex; gap: 0; border-bottom: 2px solid var(--border); flex-wrap: wrap; }
+.unit-tab {
+  padding: 10px 16px; font-size: 0.82rem; font-weight: 500;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent; margin-bottom: -2px;
+  transition: all 0.2s; background: none;
+  border-top: none; border-left: none; border-right: none;
+  font-family: var(--font-body); white-space: nowrap;
+}
+.unit-tab:hover { color: var(--fg); }
+.unit-tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+.unit-tab .unit-count {
+  font-size: 0.68rem; background: var(--surface-alt);
+  padding: 1px 6px; border-radius: 8px; margin-left: 4px;
+}
 
-.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:.75rem;color:var(--muted);padding:10px 0;}
-.legend-item{display:flex;align-items:center;gap:5px;}
-.legend-dot{width:9px;height:9px;border-radius:50%;}
+/* ═══════ FILTERS ═══════ */
+.filters { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end; }
+.filter-group { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 140px; }
+.filter-group label {
+  font-size: 0.7rem; font-weight: 600;
+  color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+}
+.filter-group select {
+  padding: 8px 10px; border: 1px solid var(--border);
+  border-radius: 8px; background: var(--surface); color: var(--fg);
+  font-family: var(--font-body); font-size: 0.82rem;
+}
 
-.table-wrap{overflow-x:auto;}
-table{width:100%;border-collapse:collapse;font-size:.78rem;}
-th{background:var(--surface-alt);font-weight:600;text-align:left;padding:8px 10px;font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);white-space:nowrap;border-bottom:2px solid var(--border);position:sticky;top:0;z-index:2;}
-th.num,td.num{text-align:right;}
-td{padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
-tr:hover td{background:var(--accent-light);}
-tr.level-1 td{font-weight:700;background:var(--row-l1-bg);color:var(--row-l1);}
-tr.level-2 td{font-weight:600;background:var(--row-l2-bg);}
-tr.level-3 td{font-weight:500;}
-tr.level-1:hover td{background:var(--row-l1-bg);}
+/* ═══════ CHART TABS ═══════ */
+.chart-tabs {
+  display: flex; gap: 4px; padding: 4px;
+  background: var(--surface-alt); border-radius: 8px;
+  margin-bottom: 16px;
+}
+.chart-tab-btn {
+  flex: 1; padding: 8px 12px;
+  border: none; background: none;
+  border-radius: 6px; font-size: 0.78rem;
+  font-weight: 500; color: var(--muted);
+  cursor: pointer; font-family: var(--font-body);
+  transition: all 0.2s;
+}
+.chart-tab-btn:hover { color: var(--fg); }
+.chart-tab-btn.active {
+  background: var(--surface);
+  color: var(--accent);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+.chart-panel { display: none; }
+.chart-panel.active { display: block; }
 
-.prog-bar{width:70px;height:5px;background:var(--surface-alt);border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px;}
-.prog-fill{height:100%;border-radius:3px;transition:width .4s ease;}
-
-.tabs{display:flex;gap:0;border-bottom:2px solid var(--border);flex-wrap:wrap;}
-.tab{padding:9px 16px;font-size:.82rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font-body);}
-.tab:hover{color:var(--fg);}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:600;}
-.tab-panel{display:none;}.tab-panel.active{display:block;}
-
-.chart-container{padding:16px 0;}.chart-container svg{width:100%;height:auto;}
-.empty-state{text-align:center;padding:50px 20px;color:var(--muted);}
-.empty-state h3{font-size:1rem;color:var(--fg);margin-bottom:6px;}
-.empty-state p{font-size:.82rem;max-width:440px;margin:0 auto;}
-
-.alert-list{display:flex;flex-direction:column;gap:8px;}
-.alert-item{display:flex;align-items:flex-start;gap:10px;padding:10px 14px;border-radius:6px;font-size:.8rem;}
-.alert-item.critica{background:var(--sem-rojo-bg);}.alert-item.media{background:var(--sem-amarillo-bg);}.alert-item.info{background:var(--sem-azul-bg);}
-.alert-icon{font-size:1rem;flex-shrink:0;margin-top:1px;}
-
-.comp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;}
-.comp-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
-.comp-card h4{font-size:.82rem;font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
-.comp-row{display:flex;justify-content:space-between;padding:5px 0;font-size:.78rem;border-bottom:1px solid var(--border);}
-.comp-row:last-child{border-bottom:none;}
-.comp-label{color:var(--muted);}.comp-val{font-weight:600;}
-
-/* ──── Charts module ──── */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-@media(max-width:700px){.charts-grid{grid-template-columns:1fr;}}
-.chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-.chart-card h4 { font-size: 0.82rem; font-weight: 600; margin-bottom: 12px; color: var(--fg); }
+/* ═══════ CHARTS ═══════ */
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.chart-card h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 12px; color: var(--fg); }
 .chart-card svg { width: 100%; height: auto; display: block; }
 .chart-analysis {
-  margin-top: 10px; padding: 10px 12px; background: var(--surface-alt);
-  border-radius: 6px; font-size: 0.76rem; line-height: 1.6; color: var(--fg);
+  margin-top: 12px; padding: 12px 14px;
+  background: var(--surface-alt);
+  border-radius: 8px; font-size: 0.76rem;
+  line-height: 1.6; color: var(--fg);
   border-left: 3px solid var(--accent);
 }
 .chart-analysis strong { color: var(--accent); }
 .chart-analysis .insight-tag {
-  display: inline-block; font-size: 0.65rem; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.05em; padding: 1px 6px; border-radius: 4px; margin-right: 4px;
+  display: inline-block; font-size: 0.65rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
+  padding: 1px 6px; border-radius: 4px; margin-right: 4px;
   background: var(--accent-light); color: var(--accent);
 }
 .chart-analysis .insight-warn { background: var(--sem-amarillo-bg); color: var(--sem-amarillo); }
 .chart-analysis .insight-ok { background: var(--sem-verde-bg); color: var(--sem-verde); }
 .chart-analysis .insight-bad { background: var(--sem-rojo-bg); color: var(--sem-rojo); }
 
-/* ──── Watermark ──── */
-.watermark {
-  text-align: center; padding: 16px; font-size: 0.68rem; color: var(--muted);
-  border-top: 1px solid var(--border); letter-spacing: 0.02em;
+/* ═══════ TABLE ═══════ */
+.table-wrap { overflow-x: auto; max-height: 480px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+th {
+  background: var(--surface-alt); font-weight: 600; text-align: left;
+  padding: 10px 12px; font-size: 0.68rem; text-transform: uppercase;
+  letter-spacing: 0.04em; color: var(--muted); white-space: nowrap;
+  border-bottom: 2px solid var(--border); position: sticky; top: 0; z-index: 2;
 }
-.watermark span { color: var(--gold); font-weight: 600; }
+th.num, td.num { text-align: right; }
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+tr:hover td { background: var(--accent-light); }
+tr.level-1 td { font-weight: 700; background: var(--row-l1-bg); color: var(--row-l1); }
+tr.level-2 td { font-weight: 600; background: var(--row-l2-bg); }
+tr.level-3 td { font-weight: 500; }
+tr.level-1:hover td { background: var(--row-l1-bg); }
+.prog-bar {
+  width: 70px; height: 5px; background: var(--surface-alt);
+  border-radius: 3px; overflow: hidden; display: inline-block;
+  vertical-align: middle; margin-right: 5px;
+}
+.prog-fill { height: 100%; border-radius: 3px; transition: width .4s ease; }
 
-/* ──── PDF Viewer Overlay ──── */
+/* ═══════ SEMÁFORO ═══════ */
+.sem {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 8px; border-radius: 10px; font-size: 0.72rem; font-weight: 600;
+}
+.sem-verde { background: var(--sem-verde-bg); color: var(--sem-verde); }
+.sem-amarillo { background: var(--sem-amarillo-bg); color: var(--sem-amarillo); }
+.sem-rojo { background: var(--sem-rojo-bg); color: var(--sem-rojo); }
+.sem-azul { background: var(--sem-azul-bg); color: var(--sem-azul); }
+.sem-dot { width: 7px; height: 7px; border-radius: 50%; }
+.sem-verde .sem-dot { background: var(--sem-verde); }
+.sem-amarillo .sem-dot { background: var(--sem-amarillo); }
+.sem-rojo .sem-dot { background: var(--sem-rojo); }
+.sem-azul .sem-dot { background: var(--sem-azul); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.75rem; color: var(--muted); padding: 10px 0; }
+.legend-item { display: flex; align-items: center; gap: 5px; }
+.legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ═══════ ALERTS ═══════ */
+.alert-list { display: flex; flex-direction: column; gap: 8px; }
+.alert-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  padding: 10px 14px; border-radius: 8px; font-size: 0.8rem;
+}
+.alert-item.critica { background: var(--sem-rojo-bg); }
+.alert-item.media { background: var(--sem-amarillo-bg); }
+.alert-item.info { background: var(--sem-azul-bg); }
+.alert-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+
+/* ═══════ COMPARATIVO ═══════ */
+.comp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+.comp-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+.comp-card h4 { font-size: 0.85rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+.comp-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 0.78rem; border-bottom: 1px solid var(--border); }
+.comp-row:last-child { border-bottom: none; }
+.comp-label { color: var(--muted); }
+.comp-val { font-weight: 600; }
+
+/* ═══════ EMPTY STATE ═══════ */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+.empty-state-icon { font-size: 3rem; margin-bottom: 16px; opacity: 0.5; }
+.empty-state h3 { font-size: 1.1rem; color: var(--fg); margin-bottom: 8px; font-family: var(--font-display); font-weight: 400; }
+.empty-state p { font-size: 0.85rem; max-width: 440px; margin: 0 auto; }
+
+/* ═══════ PDF OVERLAY ═══════ */
 .pdf-overlay {
-  position: fixed; inset: 0; z-index: 1000; background: rgba(0,0,0,0.7);
+  position: fixed; inset: 0; z-index: 1000;
+  background: rgba(0,0,0,0.7);
   display: flex; align-items: center; justify-content: center;
   padding: 20px;
 }
 .pdf-overlay[hidden] { display: none; }
 .pdf-viewer {
-  background: var(--surface); border-radius: 10px; box-shadow: 0 8px 40px rgba(0,0,0,0.4);
-  width: 100%; max-width: 1100px; height: 90vh; display: flex; flex-direction: column; overflow: hidden;
+  background: var(--surface); border-radius: 12px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.4);
+  width: 100%; max-width: 1100px; height: 90vh;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 .pdf-viewer-header {
   display: flex; align-items: center; justify-content: space-between;
@@ -255,134 +705,325 @@ tr.level-1:hover td{background:var(--row-l1-bg);}
 .pdf-viewer-close:hover { background: var(--sem-rojo); color: #fff; }
 .pdf-viewer iframe { flex: 1; border: none; width: 100%; }
 
-@media(max-width:600px){
-  .header-inner{padding:16px 14px;} h1{font-size:1.15rem;}
-  .header-badge,.btn-pdf span{display:none;}
-  .kpi-grid{grid-template-columns:repeat(2,1fr);} .kpi-value{font-size:1.2rem;}
-  .tab,.unit-tab{padding:7px 10px;font-size:.78rem;}
-  .top-row{grid-template-columns:1fr;}
+/* ═══════ BOTTOM BAR ═══════ */
+.bottom-bar {
+  text-align: center; padding: 16px;
+  font-size: 0.68rem; color: var(--muted);
+  border-top: 1px solid var(--border);
+  letter-spacing: 0.02em;
+}
+.bottom-bar span { color: var(--gold); font-weight: 600; }
+
+/* ═══════ RESPONSIVE ═══════ */
+@media (max-width: 1100px) {
+  .dash-grid { grid-template-columns: 1fr; }
+  .kpi-row { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .sidebar-toggle { display: flex; }
+  .main-wrap { margin-left: 0; }
+  .kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .upload-grid { grid-template-columns: 1fr; }
+  .topbar-badge { display: none; }
+  .chart-tabs { flex-wrap: wrap; }
+}
+@media (max-width: 480px) {
+  .kpi-row { grid-template-columns: 1fr; }
+  .content-scroll { padding: 14px 12px 40px; }
+  .topbar { padding: 12px 14px; }
+  .topbar-title { font-size: 1rem; }
 }
 </style>
+</head>
+<body>
 
-<div class="app" id="app">
-  <div class="header">
-    <div class="header-stripe"></div>
-    <div class="header-inner">
-      <div class="header-icon">⚖</div>
-      <div class="header-text">
-        <h1>Ejecución Presupuestal</h1>
-        <p>Cadena presupuestal — SIIF Nación · Rama Judicial · DESAJ Sincelejo</p>
-      </div>
-      <div class="header-right">
-        <button class="btn-pdf" id="btnPdf" disabled onclick="window.__generarPDF()">
-          <svg viewBox="0 0 16 16" fill="none"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z" stroke="#fff" stroke-width="1.2"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M5.5 9h5M5.5 11h3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>
-          <span>Generar PDF</span>
-        </button>
-        <div class="header-badge">Guía 12</div>
-      </div>
+<!-- Mobile sidebar toggle -->
+<button class="sidebar-toggle" id="sidebarToggle" onclick="document.querySelector('.sidebar').classList.toggle('open')">☰</button>
+
+<!-- ═══════ SIDEBAR ═══════ -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="sidebar-logo">⚖</div>
+    <div class="sidebar-brand-text">
+      <h2>SIIF Nación</h2>
+      <p>Ejecución Presupuestal</p>
     </div>
   </div>
 
-  <div class="card">
-    <div class="card-header">
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 5L8 2 5 5M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      Cargar reportes SIIF — Unidades ejecutoras
+  <nav class="sidebar-nav">
+    <div class="nav-section">Navegación</div>
+    <button class="nav-item active" data-section="dashboard" onclick="navTo(this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item" data-section="archivos" onclick="navTo(this)">
+      <span class="nav-icon">📁</span> Cargar Archivos
+    </button>
+    <button class="nav-item" data-section="analisis" onclick="navTo(this)">
+      <span class="nav-icon">📈</span> Análisis Gráfico
+    </button>
+    <button class="nav-item" data-section="pdf" onclick="navTo(this)">
+      <span class="nav-icon">📄</span> Generar PDF
+    </button>
+    <button class="nav-item" data-section="comparativo" onclick="navTo(this)">
+      <span class="nav-icon">🔄</span> Comparativo UE
+    </button>
+    <button class="nav-item" data-section="auditoria" onclick="navTo(this)">
+      <span class="nav-icon">🔍</span> Auditoría
+      <span class="nav-badge" id="alertCount">0</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-ue-status" id="sidebarUeStatus">
+    <h4>Estado de Carga</h4>
+    <div class="ue-status-item"><span class="ue-dot pending" id="ueDot0"></span> UE 825</div>
+    <div class="ue-status-item"><span class="ue-dot pending" id="ueDot1"></span> UE 925</div>
+    <div class="ue-status-item"><span class="ue-dot pending" id="ueDot2"></span> UE 225</div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-avatar">OP</div>
+    <div class="sidebar-footer-text">
+      <strong>DESAJ Sincelejo</strong><br>
+      Rama Judicial
     </div>
-    <div class="card-body">
-      <div class="upload-grid">
-        <div class="upload-slot" id="slot0" data-idx="0"><span class="slot-icon">📄</span><span class="slot-label">UE 825</span><span class="slot-hint">Arrastra o haz clic</span></div>
-        <div class="upload-slot" id="slot1" data-idx="1"><span class="slot-icon">📄</span><span class="slot-label">UE 925</span><span class="slot-hint">Arrastra o haz clic</span></div>
-        <div class="upload-slot" id="slot2" data-idx="2"><span class="slot-icon">📄</span><span class="slot-label">UE 225</span><span class="slot-hint">Arrastra o haz clic</span></div>
-      </div>
-      <input type="file" id="fileInput" accept=".xlsx,.xls">
-      <div id="uploadError" hidden style="margin-top:10px;padding:10px 14px;background:var(--sem-rojo-bg);border-radius:6px;font-size:.82rem;color:var(--sem-rojo);"></div>
-      <p style="font-size:.72rem;color:var(--muted);margin-top:12px;"><strong>Formato:</strong> Reporte de ejecución presupuestal SIIF Nación (.xlsx). Detección automática de unidad, año fiscal y columnas de la cadena.</p>
+  </div>
+</aside>
+
+<!-- ═══════ MAIN CONTENT ═══════ -->
+<div class="main-wrap">
+  <div class="topbar">
+    <span class="topbar-title">Ejecución Presupuestal</span>
+    <span class="topbar-date" id="topbarDate"></span>
+    <div class="topbar-right">
+      <button class="btn-pdf" id="btnPdf" disabled onclick="window.__generarPDF()">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z" stroke="#fff" stroke-width="1.2"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M5.5 9h5M5.5 11h3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>
+        <span>Generar PDF</span>
+      </button>
+      <div class="topbar-badge">Guía 12</div>
     </div>
   </div>
 
-  <div id="content" hidden>
-    <div class="card" style="overflow:visible">
-      <div class="unit-tabs" id="unitTabs"></div>
-      <div class="card-body">
-        <div class="filters">
-          <div class="filter-group"><label>Nivel de detalle</label><select id="filtroNivel"><option value="2">Cuenta (CTA)</option><option value="3">Subcuenta (SUBC)</option><option value="4" selected>Objeto del gasto (OBJG)</option><option value="5">Ordinal (ORD)</option><option value="6">Subordinal (SORD)</option><option value="0">Todos los niveles</option></select></div>
-          <div class="filter-group"><label>Tipo</label><select id="filtroTipo"><option value="">Todos</option><option value="A">A — Funcionamiento</option><option value="C">C — Inversión</option></select></div>
-          <div class="filter-group"><label>Fuente</label><select id="filtroFuente"><option value="">Todas</option></select></div>
-          <div class="filter-group"><label>Situación</label><select id="filtroSit"><option value="">Todas</option></select></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Health gauge + KPIs -->
-    <div class="top-row">
-      <div class="gauge-card" id="gaugeCard">
-        <div class="gauge-title">Índice de Salud Presupuestal</div>
-        <svg class="gauge-svg" viewBox="0 0 200 130" width="200" height="130" id="gaugeSvg"></svg>
-        <div class="gauge-score" id="gaugeScore">—</div>
-        <div class="gauge-label" id="gaugeLabel">Sin datos</div>
-        <div class="gauge-detail" id="gaugeDetail"></div>
-      </div>
-      <div class="kpi-grid" id="kpiGrid">
-        <div class="kpi azul"><div class="kpi-label">Apropiación vigente</div><div class="kpi-value" id="kpiAprop">$0</div><div class="kpi-sub" id="kpiApropSub">—</div></div>
-        <div class="kpi" id="kpiCompCard"><div class="kpi-label">% Comprometido</div><div class="kpi-value" id="kpiComp">0%</div><div class="kpi-sub" id="kpiCompSub">$0</div></div>
-        <div class="kpi" id="kpiObligCard"><div class="kpi-label">% Obligado</div><div class="kpi-value" id="kpiOblig">0%</div><div class="kpi-sub" id="kpiObligSub">$0</div></div>
-        <div class="kpi" id="kpiPagoCard"><div class="kpi-label">% Pagado</div><div class="kpi-value" id="kpiPago">0%</div><div class="kpi-sub" id="kpiPagoSub">$0</div></div>
-        <div class="kpi azul"><div class="kpi-label">Aprop. disponible</div><div class="kpi-value" id="kpiDisp">$0</div><div class="kpi-sub" id="kpiDispSub">Sin comprometer</div></div>
-      </div>
-    </div>
-
-    <div class="legend">
-      <div class="legend-item"><div class="legend-dot" style="background:var(--sem-verde)"></div> Óptimo (≥80%)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--sem-amarillo)"></div> Aceptable (50–79%)</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--sem-rojo)"></div> Bajo (&lt;50%)</div>
-    </div>
-
-    <div class="card">
-      <div class="tabs">
-        <button class="tab active" data-tab="cadena">Cadena presupuestal</button>
-        <button class="tab" data-tab="graficas">Gráficas</button>
-        <button class="tab" data-tab="comparativo">Comparativo UE</button>
-        <button class="tab" data-tab="auditoria">Alertas de auditoría</button>
-      </div>
-
-      <div class="tab-panel active" id="tab-cadena">
-        <div class="card-body"><div class="table-wrap"><table id="tablaCadena"><thead><tr>
-          <th>Código</th><th>Concepto</th><th class="num">Apropiación</th><th class="num">CDP</th>
-          <th class="num">Compromiso</th><th class="num">Obligación</th><th class="num">Pago</th>
-          <th class="num">% Oblig.</th><th>Semáforo</th>
-        </tr></thead><tbody id="tbodyCadena"></tbody><tfoot id="tfootCadena"></tfoot></table></div></div>
-      </div>
-
-      <div class="tab-panel" id="tab-graficas">
-        <div class="card-body">
-          <div class="charts-grid">
-            <div class="chart-card"><h4>Embudo — Cadena presupuestal</h4><svg id="funnelSvg" viewBox="0 0 380 260"></svg><div class="chart-analysis" id="analysisFunnel"></div></div>
-            <div class="chart-card"><h4>Composición por tipo de gasto</h4><svg id="donutSvg" viewBox="0 0 300 240"></svg><div class="chart-analysis" id="analysisDonut"></div></div>
-            <div class="chart-card"><h4>Top rubros por apropiación</h4><svg id="barSvg" viewBox="0 0 380 280"></svg><div class="chart-analysis" id="analysisBar"></div></div>
-            <div class="chart-card"><h4>Ejecución por etapa (%)</h4><svg id="radarSvg" viewBox="0 0 300 260"></svg><div class="chart-analysis" id="analysisRadar"></div></div>
+  <div class="content-scroll">
+    <!-- ═══════ SECTION: DASHBOARD ═══════ -->
+    <div class="section active" id="sec-dashboard">
+      <div id="emptyState">
+        <div class="card">
+          <div class="card-body">
+            <div class="empty-state">
+              <div class="empty-state-icon">📊</div>
+              <h3>Sin datos cargados</h3>
+              <p>Carga al menos un reporte de ejecución presupuestal del SIIF Nación para comenzar el análisis. Usa la sección <strong>"Cargar Archivos"</strong> en el menú lateral.</p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="tab-panel" id="tab-comparativo"><div class="card-body"><div class="comp-grid" id="compGrid"></div></div></div>
-      <div class="tab-panel" id="tab-auditoria"><div class="card-body"><div class="alert-list" id="alertList"></div></div></div>
-    </div>
-  </div>
+      <div id="dashContent" hidden>
+        <!-- Unit Tabs -->
+        <div class="card" style="overflow:visible; margin-bottom:18px;">
+          <div class="unit-tabs" id="unitTabs"></div>
+          <div class="card-body">
+            <div class="filters">
+              <div class="filter-group"><label>Nivel de detalle</label><select id="filtroNivel"><option value="2">Cuenta (CTA)</option><option value="3">Subcuenta (SUBC)</option><option value="4" selected>Objeto del gasto (OBJG)</option><option value="5">Ordinal (ORD)</option><option value="6">Subordinal (SORD)</option><option value="0">Todos los niveles</option></select></div>
+              <div class="filter-group"><label>Tipo</label><select id="filtroTipo"><option value="">Todos</option><option value="A">A — Funcionamiento</option><option value="C">C — Inversión</option></select></div>
+              <div class="filter-group"><label>Fuente</label><select id="filtroFuente"><option value="">Todas</option></select></div>
+              <div class="filter-group"><label>Situación</label><select id="filtroSit"><option value="">Todas</option></select></div>
+            </div>
+          </div>
+        </div>
 
-  <div id="emptyState"><div class="card"><div class="card-body"><div class="empty-state"><h3>Sin datos cargados</h3><p>Carga al menos un reporte de ejecución presupuestal del SIIF Nación. Puedes cargar hasta 3 archivos (uno por cada unidad ejecutora) para análisis individual y consolidado.</p></div></div></div></div>
+        <!-- KPIs Row -->
+        <div class="kpi-row" id="kpiRow">
+          <div class="kpi-card azul" id="kpiApropCard">
+            <div class="kpi-top"><div class="kpi-icon blue">💰</div></div>
+            <div class="kpi-label">Apropiación vigente</div>
+            <div class="kpi-value" id="kpiAprop">$0</div>
+            <div class="kpi-sub" id="kpiApropSub">—</div>
+          </div>
+          <div class="kpi-card" id="kpiCompCard">
+            <div class="kpi-top"><div class="kpi-icon green">📋</div></div>
+            <div class="kpi-label">% Comprometido</div>
+            <div class="kpi-value" id="kpiComp">0%</div>
+            <div class="kpi-sub" id="kpiCompSub">$0</div>
+            <div class="kpi-progress"><div class="kpi-progress-fill" id="kpiCompBar" style="width:0;background:var(--sem-verde)"></div></div>
+          </div>
+          <div class="kpi-card" id="kpiObligCard">
+            <div class="kpi-top"><div class="kpi-icon yellow">✅</div></div>
+            <div class="kpi-label">% Obligado</div>
+            <div class="kpi-value" id="kpiOblig">0%</div>
+            <div class="kpi-sub" id="kpiObligSub">$0</div>
+            <div class="kpi-progress"><div class="kpi-progress-fill" id="kpiObligBar" style="width:0;background:var(--sem-amarillo)"></div></div>
+          </div>
+          <div class="kpi-card" id="kpiPagoCard">
+            <div class="kpi-top"><div class="kpi-icon red">💳</div></div>
+            <div class="kpi-label">% Pagado</div>
+            <div class="kpi-value" id="kpiPago">0%</div>
+            <div class="kpi-sub" id="kpiPagoSub">$0</div>
+            <div class="kpi-progress"><div class="kpi-progress-fill" id="kpiPagoBar" style="width:0;background:var(--sem-rojo)"></div></div>
+          </div>
+          <div class="kpi-card health-card azul">
+            <div class="kpi-top"><div class="kpi-icon gold">🏥</div></div>
+            <div class="kpi-label">Índice de Salud</div>
+            <div class="kpi-value" id="kpiHealth" style="color:var(--gold)">—</div>
+            <div class="kpi-sub" id="kpiHealthSub">Ponderado</div>
+          </div>
+        </div>
 
-  <div class="pdf-overlay" id="pdfOverlay" hidden>
-    <div class="pdf-viewer">
-      <div class="pdf-viewer-header">
-        <h3>📄 Vista previa del PDF generado</h3>
-        <button class="pdf-viewer-close" onclick="document.getElementById('pdfOverlay').hidden=true;document.getElementById('pdfFrame').src='';">✕ Cerrar</button>
+        <!-- Dashboard Grid: Main + Side -->
+        <div class="dash-grid">
+          <div class="dash-main">
+            <!-- Gauge + Table -->
+            <div class="card" style="margin-bottom:18px;">
+              <div class="card-header">📉 Índice de Salud Presupuestal</div>
+              <div class="card-body" style="text-align:center;">
+                <svg class="gauge-svg" viewBox="0 0 200 130" width="200" height="130" id="gaugeSvg"></svg>
+                <div class="gauge-score" id="gaugeScore">—</div>
+                <div class="gauge-label" id="gaugeLabel">Sin datos</div>
+                <div class="gauge-detail" id="gaugeDetail"></div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                📋 Cadena Presupuestal
+                <div class="legend" style="margin-left:auto;padding:0;">
+                  <div class="legend-item"><div class="legend-dot" style="background:var(--sem-verde)"></div> ≥80%</div>
+                  <div class="legend-item"><div class="legend-dot" style="background:var(--sem-amarillo)"></div> 50–79%</div>
+                  <div class="legend-item"><div class="legend-dot" style="background:var(--sem-rojo)"></div> &lt;50%</div>
+                </div>
+              </div>
+              <div class="card-body" style="padding:0;">
+                <div class="table-wrap">
+                  <table id="tablaCadena">
+                    <thead><tr>
+                      <th>Código</th><th>Concepto</th><th class="num">Apropiación</th><th class="num">CDP</th>
+                      <th class="num">Compromiso</th><th class="num">Obligación</th><th class="num">Pago</th>
+                      <th class="num">% Oblig.</th><th>Semáforo</th>
+                    </tr></thead>
+                    <tbody id="tbodyCadena"></tbody>
+                    <tfoot id="tfootCadena"></tfoot>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Side Panel: Alerts -->
+          <div class="dash-side">
+            <div class="card" style="flex:1;">
+              <div class="card-header">🔍 Alertas de Auditoría</div>
+              <div class="card-body">
+                <div class="alert-list" id="alertListDash"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">ℹ️ Apropiación Disponible</div>
+              <div class="card-body">
+                <div style="text-align:center;">
+                  <div style="font-size:1.8rem;font-weight:700;color:var(--accent);" id="kpiDisp">$0</div>
+                  <div style="font-size:0.78rem;color:var(--muted);margin-top:4px;" id="kpiDispSub">Sin comprometer</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <iframe id="pdfFrame"></iframe>
+    </div>
+
+    <!-- ═══════ SECTION: CARGAR ARCHIVOS ═══════ -->
+    <div class="section" id="sec-archivos">
+      <div class="card">
+        <div class="card-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 5L8 2 5 5M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Cargar reportes SIIF — Unidades ejecutoras
+        </div>
+        <div class="card-body">
+          <div class="upload-grid">
+            <div class="upload-slot" id="slot0" data-idx="0"><span class="slot-icon">📄</span><span class="slot-label">UE 825</span><span class="slot-hint">Arrastra o haz clic</span></div>
+            <div class="upload-slot" id="slot1" data-idx="1"><span class="slot-icon">📄</span><span class="slot-label">UE 925</span><span class="slot-hint">Arrastra o haz clic</span></div>
+            <div class="upload-slot" id="slot2" data-idx="2"><span class="slot-icon">📄</span><span class="slot-label">UE 225</span><span class="slot-hint">Arrastra o haz clic</span></div>
+          </div>
+          <input type="file" id="fileInput" accept=".xlsx,.xls">
+          <div id="uploadError" hidden style="margin-top:12px;padding:10px 14px;background:var(--sem-rojo-bg);border-radius:8px;font-size:.82rem;color:var(--sem-rojo);"></div>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:14px;line-height:1.6;"><strong>Formato:</strong> Reporte de ejecución presupuestal SIIF Nación (.xlsx). Detección automática de unidad, año fiscal y columnas de la cadena presupuestal.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ SECTION: ANÁLISIS GRÁFICO ═══════ -->
+    <div class="section" id="sec-analisis">
+      <div class="chart-tabs">
+        <button class="chart-tab-btn active" data-chart="embudo" onclick="switchChart(this)">🔻 Embudo</button>
+        <button class="chart-tab-btn" data-chart="dona" onclick="switchChart(this)">🍩 Dona</button>
+        <button class="chart-tab-btn" data-chart="barras" onclick="switchChart(this)">📊 Barras</button>
+        <button class="chart-tab-btn" data-chart="radar" onclick="switchChart(this)">◇ Radar</button>
+      </div>
+      <div class="chart-panel active" id="cpanel-embudo">
+        <div class="chart-card"><h4>Embudo — Cadena presupuestal</h4><svg id="funnelSvg" viewBox="0 0 380 260"></svg><div class="chart-analysis" id="analysisFunnel"></div></div>
+      </div>
+      <div class="chart-panel" id="cpanel-dona">
+        <div class="chart-card"><h4>Composición por tipo de gasto</h4><svg id="donutSvg" viewBox="0 0 300 240"></svg><div class="chart-analysis" id="analysisDonut"></div></div>
+      </div>
+      <div class="chart-panel" id="cpanel-barras">
+        <div class="chart-card"><h4>Top rubros por apropiación</h4><svg id="barSvg" viewBox="0 0 380 280"></svg><div class="chart-analysis" id="analysisBar"></div></div>
+      </div>
+      <div class="chart-panel" id="cpanel-radar">
+        <div class="chart-card"><h4>Ejecución por etapa (%)</h4><svg id="radarSvg" viewBox="0 0 300 260"></svg><div class="chart-analysis" id="analysisRadar"></div></div>
+      </div>
+    </div>
+
+    <!-- ═══════ SECTION: PDF ═══════ -->
+    <div class="section" id="sec-pdf">
+      <div class="card">
+        <div class="card-body" style="text-align:center;padding:60px 20px;">
+          <div style="font-size:3rem;margin-bottom:16px;">📄</div>
+          <h3 style="font-family:var(--font-display);font-weight:400;font-size:1.2rem;margin-bottom:8px;">Generar Informe PDF</h3>
+          <p style="font-size:0.85rem;color:var(--muted);max-width:440px;margin:0 auto 20px;">Se generará un informe completo con KPIs, tabla de cadena presupuestal, análisis de gráficas e interpretación detallada con recomendaciones.</p>
+          <button class="btn-pdf" id="btnPdf2" disabled onclick="window.__generarPDF()" style="margin:0 auto;">
+            <svg viewBox="0 0 16 16" fill="none"><path d="M4 1h5l4 4v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z" stroke="#fff" stroke-width="1.2"/><path d="M9 1v4h4" stroke="#fff" stroke-width="1.2"/><path d="M5.5 9h5M5.5 11h3" stroke="#fff" stroke-width="1.2" stroke-linecap="round"/></svg>
+            <span>Generar Informe PDF</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ SECTION: COMPARATIVO ═══════ -->
+    <div class="section" id="sec-comparativo">
+      <div class="card">
+        <div class="card-header">🔄 Comparativo entre Unidades Ejecutoras</div>
+        <div class="card-body">
+          <div class="comp-grid" id="compGrid"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════ SECTION: AUDITORÍA ═══════ -->
+    <div class="section" id="sec-auditoria">
+      <div class="card">
+        <div class="card-header">🔍 Alertas de Auditoría</div>
+        <div class="card-body">
+          <div class="alert-list" id="alertList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="bottom-bar" id="watermark" hidden>
+      Herramienta de análisis presupuestal · <span>DESAJ Sincelejo</span> · Rama Judicial de Colombia · Informe generado el <span id="wmFecha"></span>
     </div>
   </div>
+</div>
 
-  <div class="watermark" id="watermark" hidden>
-    Herramienta de análisis presupuestal · <span>DESAJ Sincelejo</span> · Rama Judicial de Colombia · Informe generado el <span id="wmFecha"></span>
+<!-- PDF Overlay -->
+<div class="pdf-overlay" id="pdfOverlay" hidden>
+  <div class="pdf-viewer">
+    <div class="pdf-viewer-header">
+      <h3>📄 Vista previa del PDF generado</h3>
+      <button class="pdf-viewer-close" onclick="document.getElementById('pdfOverlay').hidden=true;document.getElementById('pdfFrame').src='';">✕ Cerrar</button>
+    </div>
+    <iframe id="pdfFrame"></iframe>
   </div>
 </div>
 
@@ -391,6 +1032,28 @@ tr.level-1:hover td{background:var(--row-l1-bg);}
 <script>
 (function(){
 'use strict';
+
+// ─── Set current date in topbar ───
+document.getElementById('topbarDate').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+// ─── Navigation ───
+window.navTo=function(btn){
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  btn.classList.add('active');
+  const sec=btn.dataset.section;
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-'+sec).classList.add('active');
+  // Close mobile sidebar
+  document.querySelector('.sidebar').classList.remove('open');
+};
+
+// ─── Chart Tabs ───
+window.switchChart=function(btn){
+  document.querySelectorAll('.chart-tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.chart-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('cpanel-'+btn.dataset.chart).classList.add('active');
+};
 
 const COLS={TIPO:0,CTA:2,SUBC:4,OBJG:6,ORD:8,SORD:11,ITEM:14,SITEM:16,CONCEPTO:18,FUENTE:26,SITUACION:31,REC:34,RECURSO:35,APROP_VIG:41,CDP:42,APROP_DISP:43,CDP_MOD:44,COMPROMISO:46,CDP_X_COMP:48,OBLIGACION:49,COMP_X_OBLIG:50,ORD_PAGO:51,OBLIG_X_ORD:52,PAGOS:53,ORD_X_PAG:54,REINTEGROS:55};
 
@@ -432,21 +1095,31 @@ document.querySelectorAll('.upload-slot').forEach(s=>{
 });
 fIn.addEventListener('change',()=>{if(fIn.files.length)loadFile(fIn.files[0],curSlot);fIn.value='';});
 
-function loadFile(f,idx){const err=document.getElementById('uploadError');err.hidden=true;const r=new FileReader();r.onload=e=>{try{unitFiles[idx]=parseSIIF(e.target.result,f.name);updSlot(idx);refreshAll();}catch(ex){err.hidden=false;err.textContent='Error: '+ex.message;}};r.readAsArrayBuffer(f);}
-function removeFile(i){unitFiles[i]=null;updSlot(i);refreshAll();}
-function updSlot(i){const s=document.getElementById('slot'+i),d=unitFiles[i];if(d){s.classList.add('loaded');const sn=d.unitName.length>50?d.unitName.slice(0,47)+'…':d.unitName;s.innerHTML=`<button class="slot-remove" onclick="event.stopPropagation();window.__removeFile(${i})">✕</button><span class="slot-icon">✓</span><span class="slot-label">${sn}</span><span class="slot-file">${d.name} · ${d.rows.length} filas · ${d.yearFiscal}</span>`;}else{s.classList.remove('loaded');s.innerHTML=`<span class="slot-icon">📄</span><span class="slot-label">Unidad Ejecutora ${i+1}</span><span class="slot-hint">Arrastra o haz clic</span>`;}}
+function loadFile(f,idx){const err=document.getElementById('uploadError');err.hidden=true;const r=new FileReader();r.onload=e=>{try{unitFiles[idx]=parseSIIF(e.target.result,f.name);updSlot(idx);updSidebarDots();refreshAll();}catch(ex){err.hidden=false;err.textContent='Error: '+ex.message;}};r.readAsArrayBuffer(f);}
+function removeFile(i){unitFiles[i]=null;updSlot(i);updSidebarDots();refreshAll();}
+function updSlot(i){const s=document.getElementById('slot'+i),d=unitFiles[i];const labels=['UE 825','UE 925','UE 225'];if(d){s.classList.add('loaded');const sn=d.unitName.length>50?d.unitName.slice(0,47)+'…':d.unitName;s.innerHTML=`<button class="slot-remove" onclick="event.stopPropagation();window.__removeFile(${i})">✕</button><span class="slot-icon">✓</span><span class="slot-label">${sn}</span><span class="slot-file">${d.name} · ${d.rows.length} filas · ${d.yearFiscal}</span>`;}else{s.classList.remove('loaded');s.innerHTML=`<span class="slot-icon">📄</span><span class="slot-label">${labels[i]}</span><span class="slot-hint">Arrastra o haz clic</span>`;}}
 window.__removeFile=removeFile;
+
+function updSidebarDots(){
+  for(let i=0;i<3;i++){
+    const dot=document.getElementById('ueDot'+i);
+    dot.className='ue-dot '+(unitFiles[i]?'loaded':'pending');
+  }
+}
 
 function refreshAll(){
   const ld=unitFiles.filter(Boolean);
-  document.getElementById('content').hidden=!ld.length;
+  document.getElementById('dashContent').hidden=!ld.length;
   document.getElementById('emptyState').hidden=!!ld.length;
   document.getElementById('watermark').hidden=!ld.length;
   document.getElementById('btnPdf').disabled=!ld.length;
+  document.getElementById('btnPdf2').disabled=!ld.length;
   if(!ld.length)return;
-  const y=ld[0].yearFiscal||new Date().getFullYear();
   document.getElementById('wmFecha').textContent=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
   buildUnitTabs();populateFilters();applyFilters();
+  // Auto-navigate to dashboard when data loaded
+  const dashBtn=document.querySelector('[data-section="dashboard"]');
+  if(dashBtn&&!dashBtn.classList.contains('active'))navTo(dashBtn);
 }
 
 function buildUnitTabs(){const c=document.getElementById('unitTabs');c.innerHTML='';const ld=unitFiles.filter(Boolean);
@@ -472,45 +1145,49 @@ function applyFilters(){
 function sumRows(rows){const ml=+document.getElementById('filtroNivel').value;let ts=rows;if(ml>0)ts=rows.filter(r=>r.level===ml);else ts=rows.filter(r=>r.level===1);
   return ts.reduce((s,r)=>{s.aprop+=r.aprop;s.cdp+=r.cdp;s.compromiso+=r.compromiso;s.obligacion+=r.obligacion;s.pagos+=r.pagos;s.ord_pago+=r.ord_pago;s.aprop_disp+=r.aprop_disp;s.reintegros+=r.reintegros;return s;},{aprop:0,cdp:0,compromiso:0,obligacion:0,pagos:0,ord_pago:0,aprop_disp:0,reintegros:0});}
 
-function renderKPIs(){const t=sumRows(filteredRows);const pC=pct(t.compromiso,t.aprop),pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop);
+function renderKPIs(){
+  const t=sumRows(filteredRows);const pC=pct(t.compromiso,t.aprop),pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop);
+  const score=Math.min(100,Math.max(0,Math.round(pC*0.2+pO*0.45+pP*0.35)));
   document.getElementById('kpiAprop').textContent=fmtM(t.aprop);
   document.getElementById('kpiApropSub').textContent=unitFiles.filter(Boolean).length>1&&activeUnit==='all'?unitFiles.filter(Boolean).length+' unidades consolidadas':'Vigencia fiscal';
   document.getElementById('kpiComp').textContent=pC.toFixed(1)+'%';document.getElementById('kpiCompSub').textContent=fmtM(t.compromiso);
   document.getElementById('kpiOblig').textContent=pO.toFixed(1)+'%';document.getElementById('kpiObligSub').textContent=fmtM(t.obligacion);
   document.getElementById('kpiPago').textContent=pP.toFixed(1)+'%';document.getElementById('kpiPagoSub').textContent=fmtM(t.pagos);
   document.getElementById('kpiDisp').textContent=fmtM(t.aprop_disp);document.getElementById('kpiDispSub').textContent=pct(t.aprop_disp,t.aprop).toFixed(1)+'% sin comprometer';
-  setKS('kpiCompCard',pC);setKS('kpiObligCard',pO);setKS('kpiPagoCard',pP);}
-function setKS(id,p){document.getElementById(id).className='kpi '+semCls(p);}
+  document.getElementById('kpiHealth').textContent=score+'/100';
+  document.getElementById('kpiHealthSub').textContent=score>=80?'Bueno':score>=50?'Aceptable':'Deficiente';
+  setKS('kpiCompCard',pC);setKS('kpiObligCard',pO);setKS('kpiPagoCard',pP);
+  // Progress bars
+  document.getElementById('kpiCompBar').style.width=Math.min(pC,100)+'%';
+  document.getElementById('kpiCompBar').style.background=pC>=80?'var(--sem-verde)':pC>=50?'var(--sem-amarillo)':'var(--sem-rojo)';
+  document.getElementById('kpiObligBar').style.width=Math.min(pO,100)+'%';
+  document.getElementById('kpiObligBar').style.background=pO>=80?'var(--sem-verde)':pO>=50?'var(--sem-amarillo)':'var(--sem-rojo)';
+  document.getElementById('kpiPagoBar').style.width=Math.min(pP,100)+'%';
+  document.getElementById('kpiPagoBar').style.background=pP>=80?'var(--sem-verde)':pP>=50?'var(--sem-amarillo)':'var(--sem-rojo)';
+}
+function setKS(id,p){const el=document.getElementById(id);el.className='kpi-card '+semCls(p);}
 
 // ──── HEALTH GAUGE ────
 function renderGauge(){
   const t=sumRows(filteredRows);
   const pC=pct(t.compromiso,t.aprop),pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop);
-  // Composite score: weighted average
   const score=Math.round(pC*0.2+pO*0.45+pP*0.35);
   const clampedScore=Math.min(100,Math.max(0,score));
-
   const svg=document.getElementById('gaugeSvg');svg.innerHTML='';
   const cx=100,cy=105,r=75;
   const startA=Math.PI,endA=0;
-  // Background arc
   svg.appendChild(mkEl('path',{d:describeArc(cx,cy,r,startA,endA),fill:'none',stroke:'var(--border)','stroke-width':'14','stroke-linecap':'round'}));
-  // Color zones
   const zoneColors=[{end:0.5,c:'var(--sem-rojo)'},{end:0.8,c:'var(--sem-amarillo)'},{end:1,c:'var(--sem-verde)'}];
   let prev=0;
   zoneColors.forEach(z=>{const a1=startA-(prev*Math.PI),a2=startA-(z.end*Math.PI);svg.appendChild(mkEl('path',{d:describeArc(cx,cy,r,a1,a2),fill:'none',stroke:z.c,'stroke-width':'14','stroke-linecap':'round',opacity:'0.18'}));prev=z.end;});
-  // Value arc
   const valAngle=startA-((clampedScore/100)*Math.PI);
   const valColor=clampedScore>=80?'var(--sem-verde)':clampedScore>=50?'var(--sem-amarillo)':'var(--sem-rojo)';
   svg.appendChild(mkEl('path',{d:describeArc(cx,cy,r,startA,valAngle),fill:'none',stroke:valColor,'stroke-width':'14','stroke-linecap':'round'}));
-  // Needle
   const nx=cx+68*Math.cos(valAngle),ny=cy-68*Math.sin(valAngle);
   svg.appendChild(mkEl('circle',{cx,cy:cy,r:'4',fill:'var(--fg)'}));
   svg.appendChild(mkEl('line',{x1:cx,y1:cy,x2:nx,y2:ny,stroke:'var(--fg)','stroke-width':'2.5','stroke-linecap':'round'}));
-  // Labels
   svg.appendChild(mkTxt('0',cx-r-6,cy+14,{'font-size':'9',fill:'var(--muted)','text-anchor':'middle'}));
   svg.appendChild(mkTxt('100',cx+r+6,cy+14,{'font-size':'9',fill:'var(--muted)','text-anchor':'middle'}));
-
   document.getElementById('gaugeScore').textContent=clampedScore;
   document.getElementById('gaugeScore').style.color=valColor.replace('var(','').replace(')','');
   const lbl=clampedScore>=85?'Excelente':clampedScore>=70?'Bueno':clampedScore>=50?'Aceptable':clampedScore>=30?'Deficiente':'Crítico';
@@ -518,13 +1195,7 @@ function renderGauge(){
   document.getElementById('gaugeLabel').style.color=valColor.replace('var(','').replace(')','');
   document.getElementById('gaugeDetail').innerHTML=`Comp. ${pC.toFixed(0)}% · Oblig. ${pO.toFixed(0)}% · Pago ${pP.toFixed(0)}%`;
 }
-
-function describeArc(cx,cy,r,startAngle,endAngle){
-  const x1=cx+r*Math.cos(startAngle),y1=cy-r*Math.sin(startAngle);
-  const x2=cx+r*Math.cos(endAngle),y2=cy-r*Math.sin(endAngle);
-  const large=Math.abs(startAngle-endAngle)>Math.PI?1:0;
-  return`M${x1},${y1}A${r},${r},0,${large},1,${x2},${y2}`;
-}
+function describeArc(cx,cy,r,startAngle,endAngle){const x1=cx+r*Math.cos(startAngle),y1=cy-r*Math.sin(startAngle);const x2=cx+r*Math.cos(endAngle),y2=cy-r*Math.sin(endAngle);const large=Math.abs(startAngle-endAngle)>Math.PI?1:0;return`M${x1},${y1}A${r},${r},0,${large},1,${x2},${y2}`;}
 
 // ──── TABLE ────
 function renderTable(){
@@ -554,7 +1225,6 @@ function renderFunnel(){
     const x=mx+(maxW-w)/2;
     const y=my+i*(barH+6);
     const pctVal=pct(s.val,t.aprop);
-    // Trapezoid shape
     const nextW=i<stages.length-1?(t.aprop>0?Math.max((stages[i+1].val/t.aprop)*maxW,8):8):w*0.8;
     const nx=(maxW-nextW)/2+mx;
     svg.appendChild(mkEl('path',{d:`M${x},${y}L${x+w},${y}L${nx+nextW},${y+barH}L${nx},${y+barH}Z`,fill:s.color,opacity:'0.85',rx:'3'}));
@@ -582,14 +1252,12 @@ function renderDonut(){
     const x2i=cx+r2*Math.cos(a1),y2i=cy+r2*Math.sin(a1);
     const large=angle>Math.PI?1:0;
     svg.appendChild(mkEl('path',{d:`M${x1o},${y1o}A${R},${R},0,${large},1,${x2o},${y2o}L${x1i},${y1i}A${r2},${r2},0,${large},0,${x2i},${y2i}Z`,fill:colors[i%colors.length]}));
-    // Label
     const midA=a1+angle/2;const lx=cx+(R+16)*Math.cos(midA),ly=cy+(R+16)*Math.sin(midA);
     const anchor=midA>Math.PI/2&&midA<3*Math.PI/2?'end':'start';
     svg.appendChild(mkTxt((row.concepto||row.tipo).slice(0,16),lx,ly,{'text-anchor':anchor,'font-size':'9',fill:'var(--fg)'}));
     svg.appendChild(mkTxt((frac*100).toFixed(1)+'%',lx,ly+11,{'text-anchor':anchor,'font-size':'8',fill:'var(--muted)'}));
     cumAngle=a2;
   });
-  // Center text
   svg.appendChild(mkTxt('Total',cx,cy-4,{'text-anchor':'middle','font-size':'8',fill:'var(--muted)'}));
   svg.appendChild(mkTxt(fmtM(total),cx,cy+10,{'text-anchor':'middle','font-size':'11',fill:'var(--fg)','font-weight':'700'}));
 }
@@ -619,14 +1287,11 @@ function renderRadar(){
   const t=sumRows(filteredRows);if(t.aprop===0)return;
   const dims=[{label:'CDP',val:pct(t.cdp,t.aprop)},{label:'Compromiso',val:pct(t.compromiso,t.aprop)},{label:'Obligación',val:pct(t.obligacion,t.aprop)},{label:'Pagos',val:pct(t.pagos,t.aprop)},{label:'Disponible',val:pct(t.aprop_disp,t.aprop)}];
   const cx=150,cy=125,R=85,n=dims.length;
-  // Grid
   [0.25,0.5,0.75,1].forEach(f=>{const pts=[];for(let i=0;i<n;i++){const a=-Math.PI/2+(2*Math.PI*i/n);pts.push(`${cx+R*f*Math.cos(a)},${cy+R*f*Math.sin(a)}`);}svg.appendChild(mkEl('polygon',{points:pts.join(' '),fill:'none',stroke:'var(--border)','stroke-width':'.8'}));});
-  // Axes
   for(let i=0;i<n;i++){const a=-Math.PI/2+(2*Math.PI*i/n);svg.appendChild(mkEl('line',{x1:cx,y1:cy,x2:cx+R*Math.cos(a),y2:cy+R*Math.sin(a),stroke:'var(--border)','stroke-width':'.5'}));
     const lx=cx+(R+18)*Math.cos(a),ly=cy+(R+18)*Math.sin(a);
     svg.appendChild(mkTxt(dims[i].label,lx,ly+3,{'text-anchor':'middle','font-size':'9',fill:'var(--muted)'}));
     svg.appendChild(mkTxt(dims[i].val.toFixed(0)+'%',lx,ly+14,{'text-anchor':'middle','font-size':'8',fill:'var(--fg)','font-weight':'600'}));}
-  // Data polygon
   const dataPts=[];for(let i=0;i<n;i++){const a=-Math.PI/2+(2*Math.PI*i/n);const v=Math.min(dims[i].val/100,1);dataPts.push(`${cx+R*v*Math.cos(a)},${cy+R*v*Math.sin(a)}`);}
   svg.appendChild(mkEl('polygon',{points:dataPts.join(' '),fill:'var(--accent)',opacity:'.15',stroke:'var(--accent)','stroke-width':'2'}));
   dataPts.forEach(p=>{const[x,y]=p.split(',');svg.appendChild(mkEl('circle',{cx:x,cy:y,r:'3.5',fill:'var(--accent)'}));});
@@ -637,147 +1302,64 @@ function renderChartAnalyses(){
   const t=sumRows(filteredRows);
   if(t.aprop===0){['analysisFunnel','analysisDonut','analysisBar','analysisRadar'].forEach(id=>{document.getElementById(id).innerHTML='';});return;}
   const pCdp=pct(t.cdp,t.aprop),pC=pct(t.compromiso,t.aprop),pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop);
-
-  // ── Funnel analysis ──
   const dropCompAprop=100-pct(t.compromiso,t.aprop);
   const dropObligComp=t.compromiso>0?(100-pct(t.obligacion,t.compromiso)):0;
   const dropPagoOblig=t.obligacion>0?(100-pct(t.pagos,t.obligacion)):0;
   let funnelHtml='<strong>Análisis del embudo:</strong> ';
   const bottleneck=Math.max(dropCompAprop,dropObligComp,dropPagoOblig);
-  if(bottleneck===dropCompAprop&&dropCompAprop>20){
-    funnelHtml+=`<span class="insight-tag ${dropCompAprop>50?'insight-bad':'insight-warn'}">Cuello de botella</span> `;
-    funnelHtml+=`La mayor caída se presenta entre <strong>Apropiación y Compromiso</strong> (${dropCompAprop.toFixed(1)}% sin comprometer). `;
-    funnelHtml+=`Esto indica que aún hay recursos apropiados sin certificado de disponibilidad o registro presupuestal. `;
-  }else if(bottleneck===dropObligComp&&dropObligComp>20){
-    funnelHtml+=`<span class="insight-tag ${dropObligComp>50?'insight-bad':'insight-warn'}">Cuello de botella</span> `;
-    funnelHtml+=`La mayor caída se presenta entre <strong>Compromiso y Obligación</strong> (${dropObligComp.toFixed(1)}% del compromiso sin obligar). `;
-    funnelHtml+=`Se requiere verificar el trámite en Central de Cuentas y la radicación de documentos soporte. `;
-  }else if(bottleneck===dropPagoOblig&&dropPagoOblig>20){
-    funnelHtml+=`<span class="insight-tag ${dropPagoOblig>50?'insight-bad':'insight-warn'}">Cuello de botella</span> `;
-    funnelHtml+=`La mayor caída se presenta entre <strong>Obligación y Pago</strong> (${dropPagoOblig.toFixed(1)}% obligado sin pagar). `;
-    funnelHtml+=`Revisar disponibilidad de PAC y trámite de órdenes de pago ante la DGCPTN. `;
-  }else{
-    funnelHtml+=`<span class="insight-tag insight-ok">Flujo adecuado</span> `;
-    funnelHtml+=`La cadena presupuestal fluye de forma equilibrada. Las caídas entre etapas están dentro de parámetros normales. `;
-  }
+  if(bottleneck===dropCompAprop&&dropCompAprop>20){funnelHtml+=`<span class="insight-tag ${dropCompAprop>50?'insight-bad':'insight-warn'}">Cuello de botella</span> La mayor caída se presenta entre <strong>Apropiación y Compromiso</strong> (${dropCompAprop.toFixed(1)}% sin comprometer). Esto indica que aún hay recursos apropiados sin certificado de disponibilidad o registro presupuestal. `;}
+  else if(bottleneck===dropObligComp&&dropObligComp>20){funnelHtml+=`<span class="insight-tag ${dropObligComp>50?'insight-bad':'insight-warn'}">Cuello de botella</span> La mayor caída se presenta entre <strong>Compromiso y Obligación</strong> (${dropObligComp.toFixed(1)}% del compromiso sin obligar). Se requiere verificar el trámite en Central de Cuentas y la radicación de documentos soporte. `;}
+  else if(bottleneck===dropPagoOblig&&dropPagoOblig>20){funnelHtml+=`<span class="insight-tag ${dropPagoOblig>50?'insight-bad':'insight-warn'}">Cuello de botella</span> La mayor caída se presenta entre <strong>Obligación y Pago</strong> (${dropPagoOblig.toFixed(1)}% obligado sin pagar). Revisar disponibilidad de PAC y trámite de órdenes de pago ante la DGCPTN. `;}
+  else{funnelHtml+=`<span class="insight-tag insight-ok">Flujo adecuado</span> La cadena presupuestal fluye de forma equilibrada. Las caídas entre etapas están dentro de parámetros normales. `;}
   funnelHtml+=`Pagos representan el <strong>${pP.toFixed(1)}%</strong> de la apropiación total.`;
   document.getElementById('analysisFunnel').innerHTML=funnelHtml;
 
-  // ── Donut analysis ──
   const tipoRows=filteredRows.filter(r=>r.level===1);
   let donutHtml='<strong>Composición del gasto:</strong> ';
-  if(tipoRows.length){
-    const totalAprop=tipoRows.reduce((s,r)=>s+r.aprop,0);
-    const sorted=[...tipoRows].sort((a,b)=>b.aprop-a.aprop);
-    const top=sorted[0];
-    const topPct=pct(top.aprop,totalAprop);
-    donutHtml+=`El tipo <strong>${top.concepto||top.tipo}</strong> concentra el <strong>${topPct.toFixed(1)}%</strong> de la apropiación total. `;
-    if(topPct>70){
-      donutHtml+=`<span class="insight-tag insight-warn">Concentración alta</span> Más del 70% se concentra en un solo tipo de gasto, lo que puede limitar la flexibilidad presupuestal. `;
-    }
-    if(sorted.length>1){
-      const segundo=sorted[1];const segPct=pct(segundo.aprop,totalAprop);
-      donutHtml+=`Le sigue <strong>${segundo.concepto||segundo.tipo}</strong> con ${segPct.toFixed(1)}%. `;
-    }
-    // Check execution of dominant type
-    const topExec=pct(top.obligacion,top.aprop);
-    if(topExec<50){
-      donutHtml+=`<span class="insight-tag insight-bad">Alerta</span> El tipo dominante tiene solo ${topExec.toFixed(1)}% de ejecución (obligación/apropiación).`;
-    }else if(topExec>=80){
-      donutHtml+=`<span class="insight-tag insight-ok">Bien</span> El tipo dominante muestra ejecución saludable (${topExec.toFixed(1)}%).`;
-    }
-  }else{donutHtml+='No hay datos a nivel de tipo de gasto.';}
+  if(tipoRows.length){const totalAprop=tipoRows.reduce((s,r)=>s+r.aprop,0);const sorted=[...tipoRows].sort((a,b)=>b.aprop-a.aprop);const top=sorted[0];const topPct=pct(top.aprop,totalAprop);donutHtml+=`El tipo <strong>${top.concepto||top.tipo}</strong> concentra el <strong>${topPct.toFixed(1)}%</strong> de la apropiación total. `;if(topPct>70){donutHtml+=`<span class="insight-tag insight-warn">Concentración alta</span> Más del 70% se concentra en un solo tipo de gasto. `;}if(sorted.length>1){const segundo=sorted[1];const segPct=pct(segundo.aprop,totalAprop);donutHtml+=`Le sigue <strong>${segundo.concepto||segundo.tipo}</strong> con ${segPct.toFixed(1)}%. `;}const topExec=pct(top.obligacion,top.aprop);if(topExec<50){donutHtml+=`<span class="insight-tag insight-bad">Alerta</span> El tipo dominante tiene solo ${topExec.toFixed(1)}% de ejecución.`;}else if(topExec>=80){donutHtml+=`<span class="insight-tag insight-ok">Bien</span> El tipo dominante muestra ejecución saludable (${topExec.toFixed(1)}%).`;}}
+  else{donutHtml+='No hay datos a nivel de tipo de gasto.';}
   document.getElementById('analysisDonut').innerHTML=donutHtml;
 
-  // ── Bar chart analysis ──
-  const ctaRows=filteredRows.filter(r=>r.level===2);
-  const sortedCta=[...ctaRows].sort((a,b)=>b.aprop-a.aprop).slice(0,8);
+  const ctaRows=filteredRows.filter(r=>r.level===2);const sortedCta=[...ctaRows].sort((a,b)=>b.aprop-a.aprop).slice(0,8);
   let barHtml='<strong>Top rubros:</strong> ';
-  if(sortedCta.length){
-    const topCta=sortedCta[0];const topCtaExec=pct(topCta.obligacion,topCta.aprop);
-    barHtml+=`El rubro de mayor apropiación es <strong>${(topCta.concepto||topCta.codigo).slice(0,40)}</strong> (${fmtM(topCta.aprop)}). `;
-    if(topCtaExec<50){
-      barHtml+=`<span class="insight-tag insight-bad">Baja ejecución</span> Su nivel de obligación es apenas ${topCtaExec.toFixed(1)}%. Requiere plan de acción para acelerar la ejecución. `;
-    }else if(topCtaExec>=80){
-      barHtml+=`<span class="insight-tag insight-ok">Ejecución alta</span> Con ${topCtaExec.toFixed(1)}% de obligación, muestra buen desempeño. `;
-    }else{
-      barHtml+=`Su ejecución es aceptable (${topCtaExec.toFixed(1)}% obligado). `;
-    }
-    // Find worst performing of top 8
-    const worstCta=sortedCta.reduce((a,b)=>pct(a.obligacion,a.aprop)<pct(b.obligacion,b.aprop)?a:b);
-    const worstPct=pct(worstCta.obligacion,worstCta.aprop);
-    if(worstPct<30&&worstCta!==topCta){
-      barHtml+=`<span class="insight-tag insight-bad">Rezago</span> <strong>${(worstCta.concepto||worstCta.codigo).slice(0,30)}</strong> es el rubro con menor ejecución (${worstPct.toFixed(1)}%).`;
-    }
-  }else{barHtml+='No hay datos a nivel de cuenta.';}
+  if(sortedCta.length){const topCta=sortedCta[0];const topCtaExec=pct(topCta.obligacion,topCta.aprop);barHtml+=`El rubro de mayor apropiación es <strong>${(topCta.concepto||topCta.codigo).slice(0,40)}</strong> (${fmtM(topCta.aprop)}). `;if(topCtaExec<50){barHtml+=`<span class="insight-tag insight-bad">Baja ejecución</span> Su nivel de obligación es apenas ${topCtaExec.toFixed(1)}%. `;}else if(topCtaExec>=80){barHtml+=`<span class="insight-tag insight-ok">Ejecución alta</span> Con ${topCtaExec.toFixed(1)}% de obligación. `;}else{barHtml+=`Su ejecución es aceptable (${topCtaExec.toFixed(1)}% obligado). `;}const worstCta=sortedCta.reduce((a,b)=>pct(a.obligacion,a.aprop)<pct(b.obligacion,b.aprop)?a:b);const worstPct=pct(worstCta.obligacion,worstCta.aprop);if(worstPct<30&&worstCta!==topCta){barHtml+=`<span class="insight-tag insight-bad">Rezago</span> <strong>${(worstCta.concepto||worstCta.codigo).slice(0,30)}</strong> es el rubro con menor ejecución (${worstPct.toFixed(1)}%).`;}}
+  else{barHtml+='No hay datos a nivel de cuenta.';}
   document.getElementById('analysisBar').innerHTML=barHtml;
 
-  // ── Radar analysis ──
   const dims=[{label:'CDP',val:pCdp},{label:'Compromiso',val:pC},{label:'Obligación',val:pO},{label:'Pagos',val:pP},{label:'Disponible',val:pct(t.aprop_disp,t.aprop)}];
   let radarHtml='<strong>Balance de ejecución:</strong> ';
-  const avg=dims.reduce((s,d)=>s+d.val,0)/dims.length;
-  const maxDim=dims.reduce((a,b)=>a.val>b.val?a:b);
-  const minDim=dims.reduce((a,b)=>a.val<b.val?a:b);
-  const spread=maxDim.val-minDim.val;
-  if(spread>40){
-    radarHtml+=`<span class="insight-tag insight-warn">Desbalance</span> `;
-    radarHtml+=`Existe una diferencia significativa de <strong>${spread.toFixed(0)} puntos</strong> entre la etapa más alta (<strong>${maxDim.label}</strong>: ${maxDim.val.toFixed(1)}%) y la más baja (<strong>${minDim.label}</strong>: ${minDim.val.toFixed(1)}%). `;
-    radarHtml+=`Un radar equilibrado indica fluidez en la cadena; la asimetría actual señala estancamiento en la etapa de <strong>${minDim.label}</strong>. `;
-  }else{
-    radarHtml+=`<span class="insight-tag insight-ok">Equilibrado</span> `;
-    radarHtml+=`Las etapas de ejecución muestran un comportamiento relativamente parejo (promedio ${avg.toFixed(1)}%). `;
-  }
-  if(pO<50&&pC>70){
-    radarHtml+=`<span class="insight-tag insight-bad">Brecha Comp→Oblig</span> Alto compromiso (${pC.toFixed(0)}%) pero baja obligación (${pO.toFixed(0)}%). Posible represamiento en la fase de causación.`;
-  }
+  const avg=dims.reduce((s,d)=>s+d.val,0)/dims.length;const maxDim=dims.reduce((a,b)=>a.val>b.val?a:b);const minDim=dims.reduce((a,b)=>a.val<b.val?a:b);const spread=maxDim.val-minDim.val;
+  if(spread>40){radarHtml+=`<span class="insight-tag insight-warn">Desbalance</span> Existe una diferencia significativa de <strong>${spread.toFixed(0)} puntos</strong> entre <strong>${maxDim.label}</strong> (${maxDim.val.toFixed(1)}%) y <strong>${minDim.label}</strong> (${minDim.val.toFixed(1)}%). `;}
+  else{radarHtml+=`<span class="insight-tag insight-ok">Equilibrado</span> Las etapas muestran comportamiento relativamente parejo (promedio ${avg.toFixed(1)}%). `;}
+  if(pO<50&&pC>70){radarHtml+=`<span class="insight-tag insight-bad">Brecha Comp→Oblig</span> Alto compromiso (${pC.toFixed(0)}%) pero baja obligación (${pO.toFixed(0)}%).`;}
   document.getElementById('analysisRadar').innerHTML=radarHtml;
 }
 
 // Helper: generates plain text analysis for PDF
 function getChartAnalysesText(){
-  const t=sumRows(filteredRows);
-  if(t.aprop===0)return[];
+  const t=sumRows(filteredRows);if(t.aprop===0)return[];
   const pCdp=pct(t.cdp,t.aprop),pC=pct(t.compromiso,t.aprop),pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop);
   const analyses=[];
-
-  // Funnel
   const dropCA=100-pC,dropOC=t.compromiso>0?(100-pct(t.obligacion,t.compromiso)):0,dropPO=t.obligacion>0?(100-pct(t.pagos,t.obligacion)):0;
-  let f='EMBUDO — CADENA PRESUPUESTAL: ';
-  const bn=Math.max(dropCA,dropOC,dropPO);
-  if(bn===dropCA&&dropCA>20)f+=`Cuello de botella entre Apropiación y Compromiso (${dropCA.toFixed(1)}% sin comprometer). Recursos apropiados sin CDP o RP.`;
-  else if(bn===dropOC&&dropOC>20)f+=`Cuello de botella entre Compromiso y Obligación (${dropOC.toFixed(1)}% sin obligar). Verificar Central de Cuentas.`;
-  else if(bn===dropPO&&dropPO>20)f+=`Cuello de botella entre Obligación y Pago (${dropPO.toFixed(1)}% sin pagar). Revisar PAC y órdenes de pago.`;
-  else f+=`La cadena fluye equilibradamente. Pagos al ${pP.toFixed(1)}% de la apropiación.`;
+  let f='EMBUDO — CADENA PRESUPUESTAL: ';const bn=Math.max(dropCA,dropOC,dropPO);
+  if(bn===dropCA&&dropCA>20)f+=`Cuello de botella entre Apropiación y Compromiso (${dropCA.toFixed(1)}% sin comprometer).`;
+  else if(bn===dropOC&&dropOC>20)f+=`Cuello de botella entre Compromiso y Obligación (${dropOC.toFixed(1)}% sin obligar).`;
+  else if(bn===dropPO&&dropPO>20)f+=`Cuello de botella entre Obligación y Pago (${dropPO.toFixed(1)}% sin pagar).`;
+  else f+=`La cadena fluye equilibradamente. Pagos al ${pP.toFixed(1)}%.`;
   analyses.push(f);
-
-  // Donut
-  const tipoRows=filteredRows.filter(r=>r.level===1);
-  let d='COMPOSICIÓN POR TIPO DE GASTO: ';
-  if(tipoRows.length){const totalA=tipoRows.reduce((s,r)=>s+r.aprop,0);const st=[...tipoRows].sort((a,b)=>b.aprop-a.aprop);const tp=st[0];const tpP=pct(tp.aprop,totalA);const tpE=pct(tp.obligacion,tp.aprop);
-    d+=`${tp.concepto||tp.tipo} concentra ${tpP.toFixed(1)}% de la apropiación. Ejecución del tipo dominante: ${tpE.toFixed(1)}%.`;
-    if(tpP>70)d+=' ALERTA: Concentración superior al 70%.';
-  }else d+='Sin datos.';
+  const tipoRows=filteredRows.filter(r=>r.level===1);let d='COMPOSICIÓN POR TIPO DE GASTO: ';
+  if(tipoRows.length){const totalA=tipoRows.reduce((s,r)=>s+r.aprop,0);const st=[...tipoRows].sort((a,b)=>b.aprop-a.aprop);const tp=st[0];const tpP=pct(tp.aprop,totalA);const tpE=pct(tp.obligacion,tp.aprop);d+=`${tp.concepto||tp.tipo} concentra ${tpP.toFixed(1)}%. Ejecución: ${tpE.toFixed(1)}%.`;if(tpP>70)d+=' Concentración >70%.';}else d+='Sin datos.';
   analyses.push(d);
-
-  // Bar
-  const ctaR=filteredRows.filter(r=>r.level===2);const sC=[...ctaR].sort((a,b)=>b.aprop-a.aprop).slice(0,8);
-  let b2='TOP RUBROS POR APROPIACIÓN: ';
-  if(sC.length){const tc=sC[0];const tcE=pct(tc.obligacion,tc.aprop);b2+=`Mayor rubro: ${(tc.concepto||tc.codigo).slice(0,40)} (${fmtM(tc.aprop)}), ejecución ${tcE.toFixed(1)}%.`;
-    const wc=sC.reduce((a,b)=>pct(a.obligacion,a.aprop)<pct(b.obligacion,b.aprop)?a:b);const wP=pct(wc.obligacion,wc.aprop);
-    if(wP<30)b2+=` Menor ejecución: ${(wc.concepto||wc.codigo).slice(0,30)} (${wP.toFixed(1)}%).`;
-  }else b2+='Sin datos.';
+  const ctaR=filteredRows.filter(r=>r.level===2);const sC=[...ctaR].sort((a,b)=>b.aprop-a.aprop).slice(0,8);let b2='TOP RUBROS: ';
+  if(sC.length){const tc=sC[0];const tcE=pct(tc.obligacion,tc.aprop);b2+=`Mayor: ${(tc.concepto||tc.codigo).slice(0,40)} (${fmtM(tc.aprop)}), ejecución ${tcE.toFixed(1)}%.`;}else b2+='Sin datos.';
   analyses.push(b2);
-
-  // Radar
-  const dims=[{l:'CDP',v:pCdp},{l:'Compromiso',v:pC},{l:'Obligación',v:pO},{l:'Pagos',v:pP},{l:'Disponible',v:pct(t.aprop_disp,t.aprop)}];
-  const mx=dims.reduce((a,b)=>a.v>b.v?a:b),mn=dims.reduce((a,b)=>a.v<b.v?a:b);
-  let r2='EJECUCIÓN POR ETAPA (RADAR): ';
-  const sp=mx.v-mn.v;
-  if(sp>40)r2+=`Desbalance de ${sp.toFixed(0)} puntos. Mayor: ${mx.l} (${mx.v.toFixed(1)}%). Menor: ${mn.l} (${mn.v.toFixed(1)}%). Estancamiento en ${mn.l}.`;
-  else r2+=`Ejecución equilibrada. Promedio ${(dims.reduce((s,dd)=>s+dd.v,0)/dims.length).toFixed(1)}%.`;
-  if(pO<50&&pC>70)r2+=` Brecha compromiso-obligación: represamiento en fase de causación.`;
+  const dimss=[{l:'CDP',v:pCdp},{l:'Compromiso',v:pC},{l:'Obligación',v:pO},{l:'Pagos',v:pP},{l:'Disponible',v:pct(t.aprop_disp,t.aprop)}];
+  const mx=dimss.reduce((a,b)=>a.v>b.v?a:b),mn=dimss.reduce((a,b)=>a.v<b.v?a:b);
+  let r2='RADAR: ';const sp=mx.v-mn.v;
+  if(sp>40)r2+=`Desbalance ${sp.toFixed(0)}pts. Mayor: ${mx.l} (${mx.v.toFixed(1)}%). Menor: ${mn.l} (${mn.v.toFixed(1)}%).`;
+  else r2+=`Equilibrado. Promedio ${(dimss.reduce((s,dd)=>s+dd.v,0)/dimss.length).toFixed(1)}%.`;
+  if(pO<50&&pC>70)r2+=` Brecha compromiso-obligación.`;
   analyses.push(r2);
-
   return analyses;
 }
 
@@ -798,24 +1380,33 @@ function renderComparativo(){const g=document.getElementById('compGrid');g.inner
 }
 
 // ──── AUDIT ALERTS ────
-function renderAuditAlerts(){const list=document.getElementById('alertList');list.innerHTML='';const alerts=[];const t=sumRows(filteredRows);const ml=+document.getElementById('filtroNivel').value;
+function renderAuditAlerts(){
+  const list=document.getElementById('alertList');const dashList=document.getElementById('alertListDash');
+  list.innerHTML='';dashList.innerHTML='';const alerts=[];const t=sumRows(filteredRows);const ml=+document.getElementById('filtroNivel').value;
   const pO=pct(t.obligacion,t.aprop),pP=pct(t.pagos,t.aprop),pC=pct(t.compromiso,t.aprop);
-  if(pO<50)alerts.push({level:'critica',icon:'⚠',msg:`Ejecución global de obligaciones al ${pO.toFixed(1)}% — por debajo del umbral mínimo. Plan de acción inmediato requerido.`});
+  if(pO<50)alerts.push({level:'critica',icon:'⚠',msg:`Ejecución global de obligaciones al ${pO.toFixed(1)}% — por debajo del umbral mínimo.`});
   else if(pO<80)alerts.push({level:'media',icon:'⚡',msg:`Ejecución de obligaciones al ${pO.toFixed(1)}% — aceptable pero lejos del óptimo.`});
-  if(t.obligacion>0&&pP<pO*0.6)alerts.push({level:'critica',icon:'⚠',msg:`Rezago en pagos: obligado ${fmtM(t.obligacion)} pero pagado ${fmtM(t.pagos)} (${pP.toFixed(1)}%). Verificar PAC.`});
-  if(t.cdp>t.compromiso*1.3&&t.compromiso>0)alerts.push({level:'media',icon:'📋',msg:`CDP sin comprometer: ${fmtM(t.cdp-t.compromiso)} en CDP sin registro presupuestal.`});
+  if(t.obligacion>0&&pP<pO*0.6)alerts.push({level:'critica',icon:'⚠',msg:`Rezago en pagos: obligado ${fmtM(t.obligacion)} pero pagado ${fmtM(t.pagos)} (${pP.toFixed(1)}%).`});
+  if(t.cdp>t.compromiso*1.3&&t.compromiso>0)alerts.push({level:'media',icon:'📋',msg:`CDP sin comprometer: ${fmtM(t.cdp-t.compromiso)} en CDP sin RP.`});
   const leaves=ml>0?filteredRows.filter(r=>r.level===ml):filteredRows.filter(r=>r.level===1);
   let rR=0,rS=0,rSo=0;const rD=[];
   leaves.forEach(r=>{const po=pct(r.obligacion,r.aprop);if(po<30&&r.aprop>1e6){rR++;if(rD.length<3)rD.push(`${r.concepto} (${po.toFixed(0)}%)`);}if(r.aprop>0&&r.obligacion===0&&r.compromiso>0)rS++;if(r.obligacion>r.aprop*1.01&&r.aprop>0)rSo++;});
   if(rR)alerts.push({level:'critica',icon:'🔴',msg:`${rR} rubro(s) con ejecución <30%: ${rD.join('; ')}${rR>3?' y otros':''}.`});
-  if(rS)alerts.push({level:'media',icon:'📝',msg:`${rS} rubro(s) con compromiso sin obligación. Verificar Central de Cuentas.`});
-  if(rSo)alerts.push({level:'critica',icon:'🚨',msg:`${rSo} rubro(s) con sobre-ejecución. Verificar adiciones o vigencias futuras.`});
-  if(t.reintegros>0)alerts.push({level:'info',icon:'↩',msg:`Reintegros por ${fmtM(t.reintegros)} registrados.`});
+  if(rS)alerts.push({level:'media',icon:'📝',msg:`${rS} rubro(s) con compromiso sin obligación.`});
+  if(rSo)alerts.push({level:'critica',icon:'🚨',msg:`${rSo} rubro(s) con sobre-ejecución.`});
+  if(t.reintegros>0)alerts.push({level:'info',icon:'↩',msg:`Reintegros por ${fmtM(t.reintegros)}.`});
   const ld=unitFiles.filter(Boolean);
   if(ld.length>1){const us=ld.map(u=>{const l1=u.rows.filter(r=>r.level===1);const s=l1.reduce((a,r)=>{a.aprop+=r.aprop;a.oblig+=r.obligacion;return a;},{aprop:0,oblig:0});return{name:u.unitName.replace(/.*\d{2}-\d{2}-\d{2}-\d+\s*/,'').trim(),pct:pct(s.oblig,s.aprop)};});const w=us.reduce((a,b)=>a.pct<b.pct?a:b),be=us.reduce((a,b)=>a.pct>b.pct?a:b);
     if(be.pct-w.pct>20)alerts.push({level:'media',icon:'📊',msg:`Brecha: ${be.name} al ${be.pct.toFixed(1)}% vs ${w.name} al ${w.pct.toFixed(1)}%.`});}
   if(!alerts.length)alerts.push({level:'info',icon:'✅',msg:'No se detectaron alertas. Ejecución dentro de parámetros normales.'});
-  alerts.forEach(a=>{const d=document.createElement('div');d.className=`alert-item ${a.level}`;d.innerHTML=`<span class="alert-icon">${a.icon}</span><span>${a.msg}</span>`;list.appendChild(d);});
+  // Update badge count
+  document.getElementById('alertCount').textContent=alerts.filter(a=>a.level==='critica').length||alerts.length;
+  // Render in both lists
+  alerts.forEach(a=>{
+    const html=`<div class="alert-item ${a.level}"><span class="alert-icon">${a.icon}</span><span>${a.msg}</span></div>`;
+    list.insertAdjacentHTML('beforeend',html);
+    dashList.insertAdjacentHTML('beforeend',html);
+  });
 }
 
 // ──── PDF GENERATION ────
@@ -831,8 +1422,7 @@ window.__generarPDF=function(){
     const loaded=unitFiles.filter(Boolean);
     const viewLabel=activeUnit==='all'?(loaded.length>1?'Consolidado ('+loaded.length+' UE)':loaded[0].unitName):unitFiles[+activeUnit].unitName;
 
-    // Header
-    doc.setFillColor(27,79,114);doc.rect(0,0,W,22,  'F');
+    doc.setFillColor(27,79,114);doc.rect(0,0,W,22,'F');
     doc.setFillColor(201,168,76);doc.rect(0,22,W,2,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(14);doc.setTextColor(255);
     doc.text('INFORME DE EJECUCIÓN PRESUPUESTAL',14,10);
@@ -841,12 +1431,9 @@ window.__generarPDF=function(){
     doc.setFontSize(8);doc.text('Generado: '+fecha,W-14,10,{align:'right'});
     doc.text('Guía Financiera No. 12',W-14,15,{align:'right'});
 
-    // Unit info
     doc.setTextColor(27,79,114);doc.setFontSize(10);doc.setFont('helvetica','bold');
-    doc.text('Vista: '+viewLabel.slice(0,80),14,32);
-    doc.setTextColor(0);
+    doc.text('Vista: '+viewLabel.slice(0,80),14,32);doc.setTextColor(0);
 
-    // KPI boxes
     const kpis=[
       {label:'Apropiación vigente',val:fmtM(t.aprop),col:[41,128,185]},
       {label:'% Comprometido',val:pC.toFixed(1)+'%',col:pC>=80?[39,174,96]:pC>=50?[243,156,18]:[231,76,60]},
@@ -855,292 +1442,118 @@ window.__generarPDF=function(){
       {label:'Salud presupuestal',val:score+'/100',col:score>=80?[39,174,96]:score>=50?[243,156,18]:[231,76,60]}
     ];
     const kw=(W-28-4*4)/5;
-    kpis.forEach((k,i)=>{
-      const x=14+i*(kw+4),y=37;
-      doc.setFillColor(245,246,248);doc.roundedRect(x,y,kw,16,2,2,'F');
-      doc.setFillColor(...k.col);doc.rect(x,y,1.5,16,'F');
-      doc.setFontSize(6);doc.setTextColor(107,114,128);doc.setFont('helvetica','normal');
-      doc.text(k.label.toUpperCase(),x+5,y+5);
-      doc.setFontSize(12);doc.setTextColor(...k.col);doc.setFont('helvetica','bold');
-      doc.text(k.val,x+5,y+13);
-    });
+    kpis.forEach((k,i)=>{const x=14+i*(kw+4),y=37;doc.setFillColor(245,246,248);doc.roundedRect(x,y,kw,16,2,2,'F');doc.setFillColor(...k.col);doc.rect(x,y,1.5,16,'F');doc.setFontSize(6);doc.setTextColor(107,114,128);doc.setFont('helvetica','normal');doc.text(k.label.toUpperCase(),x+5,y+5);doc.setFontSize(12);doc.setTextColor(...k.col);doc.setFont('helvetica','bold');doc.text(k.val,x+5,y+13);});
 
-    // ── Resumen ejecutivo ──
     let ty=58;
     doc.setFillColor(27,79,114);doc.roundedRect(14,ty,W-28,38,2,2,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
     doc.text('RESUMEN EJECUTIVO — ÍNDICE DE SALUD PRESUPUESTAL',20,ty+7);
-
-    // Gauge score circle
     const gx=30,gy=ty+24;
     doc.setFillColor(255,255,255);doc.circle(gx,gy,8,'F');
-    const sc=score>=80?[39,174,96]:score>=50?[243,156,18]:[231,76,60];
-    doc.setTextColor(...sc);doc.setFont('helvetica','bold');doc.setFontSize(16);
+    const sc2=score>=80?[39,174,96]:score>=50?[243,156,18]:[231,76,60];
+    doc.setTextColor(...sc2);doc.setFont('helvetica','bold');doc.setFontSize(16);
     doc.text(score.toString(),gx,gy+2,{align:'center'});
-    doc.setFontSize(5);doc.setTextColor(255);
-    doc.text('/100',gx,gy+7,{align:'center'});
-
-    // Score label
+    doc.setFontSize(5);doc.setTextColor(255);doc.text('/100',gx,gy+7,{align:'center'});
     const scoreLbl=score>=80?'BUENO':score>=50?'ACEPTABLE':'BAJO';
-    doc.setFillColor(...sc);doc.roundedRect(gx+12,gy-4,18,8,1.5,1.5,'F');
+    doc.setFillColor(...sc2);doc.roundedRect(gx+12,gy-4,18,8,1.5,1.5,'F');
     doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(255);
     doc.text(scoreLbl,gx+21,gy+1,{align:'center'});
-
-    // Analysis text
     const pApDisp=pct(t.aprop-t.compromiso,t.aprop);
     const pOrdPag=t.obligacion>0?pct(t.pagos,t.obligacion):0;
     const resLines=[];
-    resLines.push(`Apropiación vigente: ${fmtF(t.aprop)}. De este monto, el ${pC.toFixed(1)}% se encuentra comprometido (${fmtF(t.compromiso)}), el ${pO.toFixed(1)}% obligado (${fmtF(t.obligacion)}) y el ${pP.toFixed(1)}% pagado (${fmtF(t.pagos)}).`);
-    if(pApDisp>20)resLines.push(`▸ El ${pApDisp.toFixed(1)}% de la apropiación (${fmtF(t.aprop-t.compromiso)}) permanece disponible sin comprometer.`);
-    if(pO<pC-10)resLines.push(`▸ Brecha significativa entre compromiso (${pC.toFixed(1)}%) y obligación (${pO.toFixed(1)}%): posible rezago en Central de Cuentas.`);
-    if(pOrdPag<90&&t.obligacion>0)resLines.push(`▸ De lo obligado, solo el ${pOrdPag.toFixed(1)}% se ha pagado. Revisar órdenes de pago y PAC.`);
-    if(score>=80)resLines.push('Diagnóstico: La ejecución presupuestal es saludable. La cadena del gasto fluye con normalidad.');
-    else if(score>=50)resLines.push('Diagnóstico: La ejecución es aceptable pero requiere seguimiento continuo para cerrar brechas identificadas.');
-    else resLines.push('Diagnóstico: La ejecución es deficiente. Se requiere plan de acción inmediato para acelerar compromisos, obligaciones y pagos.');
-    const ponderacion=`Ponderación del índice: Compromiso×0.20 (${(pC*0.2).toFixed(1)}) + Obligación×0.45 (${(pO*0.45).toFixed(1)}) + Pagos×0.35 (${(pP*0.35).toFixed(1)}) = ${score}`;
-    resLines.push(ponderacion);
-
+    resLines.push(`Apropiación vigente: ${fmtF(t.aprop)}. Comprometido ${pC.toFixed(1)}%, obligado ${pO.toFixed(1)}%, pagado ${pP.toFixed(1)}%.`);
+    if(pApDisp>20)resLines.push(`▸ ${pApDisp.toFixed(1)}% (${fmtF(t.aprop-t.compromiso)}) sin comprometer.`);
+    if(pO<pC-10)resLines.push(`▸ Brecha compromiso (${pC.toFixed(1)}%) vs obligación (${pO.toFixed(1)}%).`);
+    if(pOrdPag<90&&t.obligacion>0)resLines.push(`▸ Solo ${pOrdPag.toFixed(1)}% de lo obligado se ha pagado.`);
+    if(score>=80)resLines.push('Diagnóstico: Ejecución saludable.');
+    else if(score>=50)resLines.push('Diagnóstico: Ejecución aceptable, requiere seguimiento.');
+    else resLines.push('Diagnóstico: Ejecución deficiente, plan de acción inmediato requerido.');
+    resLines.push(`Ponderación: Comp×0.20 (${(pC*0.2).toFixed(1)}) + Oblig×0.45 (${(pO*0.45).toFixed(1)}) + Pagos×0.35 (${(pP*0.35).toFixed(1)}) = ${score}`);
     doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(220,230,240);
-    let rty=ty+13;
-    const resX=gx+34;
-    resLines.forEach(line=>{
-      const wrapped=doc.splitTextToSize(line,W-28-resX+8);
-      wrapped.forEach(wl=>{
-        if(wl.startsWith('▸')){doc.setTextColor(255,210,80);doc.text(wl,resX,rty);doc.setTextColor(220,230,240);}
-        else if(wl.startsWith('Diagnóstico')||wl.startsWith('Ponderación')){doc.setFont('helvetica','bold');doc.setTextColor(255);doc.text(wl,resX,rty);doc.setFont('helvetica','normal');doc.setTextColor(220,230,240);}
-        else doc.text(wl,resX,rty);
-        rty+=3.5;
-      });
-    });
-
+    let rty=ty+13;const resX=gx+34;
+    resLines.forEach(line=>{const wrapped=doc.splitTextToSize(line,W-28-resX+8);wrapped.forEach(wl=>{if(wl.startsWith('▸')){doc.setTextColor(255,210,80);doc.text(wl,resX,rty);doc.setTextColor(220,230,240);}else if(wl.startsWith('Diagnóstico')||wl.startsWith('Ponderación')){doc.setFont('helvetica','bold');doc.setTextColor(255);doc.text(wl,resX,rty);doc.setFont('helvetica','normal');doc.setTextColor(220,230,240);}else doc.text(wl,resX,rty);rty+=3.5;});});
     ty=ty+42;
 
-    // Table
     doc.setFontSize(9);doc.setTextColor(27,79,114);doc.setFont('helvetica','bold');
     doc.text('CADENA PRESUPUESTAL',14,ty);ty+=5;
     const cols=['Código','Concepto','Apropiación','CDP','Compromiso','Obligación','Pagos','% Oblig.'];
     const colW=[22,50,28,28,28,28,28,18];
-    // Header row
     doc.setFillColor(238,240,244);let cx2=14;
-    cols.forEach((c,i)=>{doc.rect(cx2,ty,colW[i],6,'F');doc.setFontSize(5.5);doc.setTextColor(107,114,128);doc.setFont('helvetica','bold');doc.text(c,cx2+1,ty+4);cx2+=colW[i];});
-    ty+=6;
-
+    cols.forEach((c,i)=>{doc.rect(cx2,ty,colW[i],6,'F');doc.setFontSize(5.5);doc.setTextColor(107,114,128);doc.setFont('helvetica','bold');doc.text(c,cx2+1,ty+4);cx2+=colW[i];});ty+=6;
     doc.setFont('helvetica','normal');doc.setTextColor(26,29,38);
     const maxRows=Math.min(filteredRows.length,40);
-    for(let ri=0;ri<maxRows;ri++){
-      const r=filteredRows[ri];
-      if(ty>H-18){doc.addPage();ty=14;
-        doc.setFillColor(238,240,244);cx2=14;cols.forEach((c,i)=>{doc.rect(cx2,ty,colW[i],6,'F');doc.setFontSize(5.5);doc.setTextColor(107,114,128);doc.setFont('helvetica','bold');doc.text(c,cx2+1,ty+4);cx2+=colW[i];});ty+=6;doc.setFont('helvetica','normal');doc.setTextColor(26,29,38);}
+    for(let ri=0;ri<maxRows;ri++){const r=filteredRows[ri];
+      if(ty>H-18){doc.addPage();ty=14;doc.setFillColor(238,240,244);cx2=14;cols.forEach((c,i)=>{doc.rect(cx2,ty,colW[i],6,'F');doc.setFontSize(5.5);doc.setTextColor(107,114,128);doc.setFont('helvetica','bold');doc.text(c,cx2+1,ty+4);cx2+=colW[i];});ty+=6;doc.setFont('helvetica','normal');doc.setTextColor(26,29,38);}
       const po=pct(r.obligacion,r.aprop);
       if(r.level<=1){doc.setFillColor(214,234,248);doc.rect(14,ty,230,5,'F');doc.setFont('helvetica','bold');doc.setTextColor(27,79,114);}
       else if(r.level===2){doc.setFont('helvetica','bold');doc.setTextColor(26,29,38);}
       else{doc.setFont('helvetica','normal');doc.setTextColor(26,29,38);}
       doc.setFontSize(5);
       const vals=[r.codigo,(r.concepto||'—').slice(0,35),fmtF(r.aprop),fmtF(r.cdp),fmtF(r.compromiso),fmtF(r.obligacion),fmtF(r.pagos),po.toFixed(1)+'%'];
-      cx2=14;vals.forEach((v,i)=>{const align=i>=2?'right':'left';const tx=align==='right'?cx2+colW[i]-1:cx2+1;doc.text(v,tx,ty+3.5,{align});cx2+=colW[i];});
-      ty+=5;
-    }
+      cx2=14;vals.forEach((v,i)=>{const align=i>=2?'right':'left';const tx=align==='right'?cx2+colW[i]-1:cx2+1;doc.text(v,tx,ty+3.5,{align});cx2+=colW[i];});ty+=5;}
     if(filteredRows.length>maxRows){doc.setFontSize(6);doc.setTextColor(107,114,128);doc.text(`... y ${filteredRows.length-maxRows} filas más`,14,ty+4);ty+=8;}
 
-    // ── Analysis section (chart analyses + narrative interpretation) ──
     const analyses=getChartAnalysesText();
     if(analyses.length){
-      // ─── PAGE: ANÁLISIS DE GRÁFICAS ───
       doc.addPage();
-      doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
-      doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
+      doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
-      doc.text('INFORME DE EJECUCIÓN PRESUPUESTAL — ANÁLISIS DE GRÁFICAS',14,8);
-      doc.setFontSize(7);doc.text(fecha,W-14,8,{align:'right'});
-
-      let ay=22;
-      doc.setFontSize(11);doc.setTextColor(27,79,114);doc.setFont('helvetica','bold');
-      doc.text('ANÁLISIS E INTERPRETACIÓN DE GRÁFICAS',14,ay);ay+=8;
-
+      doc.text('ANÁLISIS DE GRÁFICAS',14,8);doc.setFontSize(7);doc.text(fecha,W-14,8,{align:'right'});
+      let ay=22;doc.setFontSize(11);doc.setTextColor(27,79,114);doc.setFont('helvetica','bold');
+      doc.text('ANÁLISIS E INTERPRETACIÓN',14,ay);ay+=8;
       const icons=['▼','◉','▮','◇'];
-      analyses.forEach((txt,i)=>{
-        const colonIdx=txt.indexOf(':');
-        const title=colonIdx>0?txt.slice(0,colonIdx+1):'';
-        const body=colonIdx>0?txt.slice(colonIdx+1).trim():txt;
-        doc.setFont('helvetica','normal');doc.setFontSize(7);
-        const bodyLines=doc.splitTextToSize(body,W-42);
-        const boxH=Math.max(18, 10+bodyLines.length*3.5+2);
-
-        if(ay+boxH>H-18){doc.addPage();ay=14;
-          doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
-          doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
-          doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
-          doc.text('ANÁLISIS DE GRÁFICAS (continuación)',14,8);ay=22;}
-
-        doc.setFillColor(245,246,248);doc.roundedRect(14,ay,W-28,boxH,2,2,'F');
-        doc.setFillColor(27,79,114);doc.rect(14,ay,2,boxH,'F');
-
-        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(27,79,114);
-        doc.text(icons[i]+' '+title,18,ay+6);
-
-        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);
-        doc.text(bodyLines,18,ay+11);
-
-        ay+=boxH+5;
-      });
-
-      // Summary box
-      ay+=4;
-      if(ay+16>H-18){doc.addPage();ay=14;}
-      doc.setFillColor(253,246,227);doc.roundedRect(14,ay,W-28,14,2,2,'F');
-      doc.setFillColor(201,168,76);doc.rect(14,ay,2,14,'F');
-      const score2=Math.min(100,Math.max(0,Math.round(pC*0.2+pO*0.45+pP*0.35)));
-      const sumTxt=`ÍNDICE DE SALUD PRESUPUESTAL: ${score2}/100 — Comp. ${pC.toFixed(1)}% · Oblig. ${pO.toFixed(1)}% · Pagos ${pP.toFixed(1)}%. ${score2>=80?'Ejecución saludable.':score2>=50?'Ejecución aceptable, se requiere seguimiento.':'Ejecución deficiente, requiere plan de acción inmediato.'}`;
-      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(160,130,40);
-      doc.text(sumTxt.slice(0,sumTxt.indexOf(':')+1),18,ay+6);
-      doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(80,70,30);
-      const sumLines2=doc.splitTextToSize(sumTxt.slice(sumTxt.indexOf(':')+1).trim(),W-40);
-      doc.text(sumLines2,18,ay+10);
+      analyses.forEach((txt,i)=>{const colonIdx=txt.indexOf(':');const title=colonIdx>0?txt.slice(0,colonIdx+1):'';const body=colonIdx>0?txt.slice(colonIdx+1).trim():txt;
+        doc.setFont('helvetica','normal');doc.setFontSize(7);const bodyLines=doc.splitTextToSize(body,W-42);const boxH=Math.max(18,10+bodyLines.length*3.5+2);
+        if(ay+boxH>H-18){doc.addPage();ay=14;doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);doc.text('ANÁLISIS (continuación)',14,8);ay=22;}
+        doc.setFillColor(245,246,248);doc.roundedRect(14,ay,W-28,boxH,2,2,'F');doc.setFillColor(27,79,114);doc.rect(14,ay,2,boxH,'F');
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(27,79,114);doc.text(icons[i]+' '+title,18,ay+6);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);doc.text(bodyLines,18,ay+11);ay+=boxH+5;});
+      ay+=4;if(ay+16>H-18){doc.addPage();ay=14;}
+      doc.setFillColor(253,246,227);doc.roundedRect(14,ay,W-28,14,2,2,'F');doc.setFillColor(201,168,76);doc.rect(14,ay,2,14,'F');
+      const sumTxt=`ÍNDICE DE SALUD: ${score}/100 — Comp. ${pC.toFixed(1)}% · Oblig. ${pO.toFixed(1)}% · Pagos ${pP.toFixed(1)}%. ${score>=80?'Ejecución saludable.':score>=50?'Aceptable, requiere seguimiento.':'Deficiente, plan de acción inmediato.'}`;
+      doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(160,130,40);doc.text(sumTxt.slice(0,sumTxt.indexOf(':')+1),18,ay+6);
+      doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(80,70,30);doc.text(doc.splitTextToSize(sumTxt.slice(sumTxt.indexOf(':')+1).trim(),W-40),18,ay+10);
     }
 
-    // ─── PAGE: ANÁLISIS INTERPRETATIVO DETALLADO ───
-    {
-      doc.addPage();
-      doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
-      doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
+    // ─── ANÁLISIS INTERPRETATIVO DETALLADO ───
+    {doc.addPage();
+      doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
-      doc.text('INFORME DE EJECUCIÓN PRESUPUESTAL — ANÁLISIS INTERPRETATIVO',14,8);
-      doc.setFontSize(7);doc.text(fecha,W-14,8,{align:'right'});
-
-      let ny=20;
-      const textW=W-32;
-      const fs=7.5; // font size for body text
-      const lh=3.8; // line height
-
-      // Helper: write a section with auto-page-break
-      function writeSec(titleTxt, bodyTxt, accentColor){
-        // Check if title + at least 4 lines fit
-        if(ny+20>H-18){doc.addPage();ny=14;
-          doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
-          doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
-          doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
-          doc.text('ANÁLISIS INTERPRETATIVO (continuación)',14,8);ny=20;}
-
-        // Section title with accent bar
-        doc.setFillColor(...(accentColor||[27,79,114]));
-        doc.rect(14,ny,W-28,0.8,'F');
-        ny+=4;
-        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...(accentColor||[27,79,114]));
-        doc.text(titleTxt,16,ny);
-        ny+=5;
-
-        // Body text
+      doc.text('ANÁLISIS INTERPRETATIVO',14,8);doc.setFontSize(7);doc.text(fecha,W-14,8,{align:'right'});
+      let ny=20;const textW=W-32;const fs=7.5;const lh=3.8;
+      function writeSec(titleTxt,bodyTxt,accentColor){
+        if(ny+20>H-18){doc.addPage();ny=14;doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);doc.text('ANÁLISIS INTERPRETATIVO (cont.)',14,8);ny=20;}
+        doc.setFillColor(...(accentColor||[27,79,114]));doc.rect(14,ny,W-28,0.8,'F');ny+=4;
+        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...(accentColor||[27,79,114]));doc.text(titleTxt,16,ny);ny+=5;
         doc.setFont('helvetica','normal');doc.setFontSize(fs);doc.setTextColor(40,40,40);
         const wrappedLines=doc.splitTextToSize(bodyTxt,textW);
-        wrappedLines.forEach(ln=>{
-          if(ny+lh>H-14){doc.addPage();ny=14;
-            doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
-            doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
-            doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
-            doc.text('ANÁLISIS INTERPRETATIVO (continuación)',14,8);ny=20;
-            doc.setFont('helvetica','normal');doc.setFontSize(fs);doc.setTextColor(40,40,40);}
-          doc.text(ln,16,ny);
-          ny+=lh;
-        });
-        ny+=4;
-      }
-
-      // Compute all needed values
-      const pCdp=pct(t.cdp,t.aprop);
-      const pApDisp=pct(t.aprop-t.compromiso,t.aprop);
-      const pOC=t.compromiso>0?pct(t.obligacion,t.compromiso):0;
-      const pPO=t.obligacion>0?pct(t.pagos,t.obligacion):0;
-      const pOrdPag=t.obligacion>0?pct(t.pagos,t.obligacion):0;
-      const sinComp=t.aprop-t.compromiso;
-      const sinOblig=t.compromiso-t.obligacion;
-      const sinPago=t.obligacion-t.pagos;
-
-      // ── 1. CONTEXTO GENERAL ──
+        wrappedLines.forEach(ln=>{if(ny+lh>H-14){doc.addPage();ny=14;doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);doc.text('ANÁLISIS INTERPRETATIVO (cont.)',14,8);ny=20;doc.setFont('helvetica','normal');doc.setFontSize(fs);doc.setTextColor(40,40,40);}doc.text(ln,16,ny);ny+=lh;});ny+=4;}
+      const pCdp2=pct(t.cdp,t.aprop);const pApDisp2=pct(t.aprop-t.compromiso,t.aprop);const pOC2=t.compromiso>0?pct(t.obligacion,t.compromiso):0;const pPO2=t.obligacion>0?pct(t.pagos,t.obligacion):0;
+      const sinComp=t.aprop-t.compromiso;const sinOblig=t.compromiso-t.obligacion;const sinPago=t.obligacion-t.pagos;
       const nivelEjec=pO>=80?'alta':pO>=60?'moderada':pO>=40?'baja':'muy baja';
-      writeSec('1. CONTEXTO GENERAL DE LA EJECUCIÓN PRESUPUESTAL',
-        `La ${viewLabel} cuenta con una apropiación vigente total de ${fmtF(t.aprop)}, de la cual se han comprometido ${fmtF(t.compromiso)} (${pC.toFixed(1)}%), se han causado obligaciones por ${fmtF(t.obligacion)} (${pO.toFixed(1)}%) y se han efectuado pagos por ${fmtF(t.pagos)} (${pP.toFixed(1)}%). Esto indica un nivel de ejecución presupuestal ${nivelEjec}, `+
-        (pO>=80?'lo que refleja un avance significativo en el ciclo presupuestal. La entidad está cumpliendo satisfactoriamente con los compromisos adquiridos y la cadena del gasto fluye de manera adecuada.':
-        pO>=60?'lo que evidencia un avance aceptable pero que requiere atención para garantizar que los recursos apropiados se ejecuten oportunamente antes del cierre de la vigencia fiscal. Se recomienda fortalecer la gestión en las etapas de obligación y pago.':
-        pO>=40?'lo cual evidencia un ritmo de ejecución que podría comprometer el cumplimiento de las metas presupuestales de la vigencia. Es necesario implementar un plan de aceleración que permita convertir los compromisos en obligaciones y pagos efectivos.':
-        'lo cual representa una situación preocupante que requiere atención urgente. El bajo nivel de ejecución puede derivar en constitución de reservas presupuestales significativas y en el riesgo de pérdida de recursos por no ejecución al cierre de la vigencia fiscal.'),
-        [27,79,114]);
-
-      // ── 2. APROPIACIÓN Y DISPONIBILIDAD ──
-      writeSec('2. APROPIACIÓN PRESUPUESTAL Y DISPONIBILIDAD',
-        `Del total apropiado de ${fmtF(t.aprop)}, se han expedido Certificados de Disponibilidad Presupuestal (CDP) por ${fmtF(t.cdp)}, equivalentes al ${pCdp.toFixed(1)}% de la apropiación. `+
-        (pApDisp>30?`Actualmente, ${fmtF(sinComp)} (${pApDisp.toFixed(1)}% de la apropiación) permanecen sin comprometer, lo que constituye un monto significativo de recursos ociosos. Esta situación puede obedecer a demoras en los procesos de contratación, falta de necesidades de gasto identificadas, o lentitud en la expedición de CDP y registros presupuestales. Se recomienda revisar la programación presupuestal para determinar si estos recursos requieren ser reasignados o si existen necesidades pendientes de tramitar.`:
-        pApDisp>10?`Queda un saldo disponible de ${fmtF(sinComp)} (${pApDisp.toFixed(1)}%) sin comprometer. Si bien es un porcentaje moderado, conviene verificar que estos recursos tengan destinación planificada para evitar su pérdida al cierre de la vigencia.`:
-        `Solo ${fmtF(sinComp)} (${pApDisp.toFixed(1)}%) quedan sin comprometer, lo cual indica una apropiación casi totalmente comprometida. La disponibilidad restante es mínima y la entidad ha logrado vincular la casi totalidad de sus recursos a compromisos específicos.`),
-        [41,128,185]);
-
-      // ── 3. COMPROMISOS (RP) ──
-      writeSec('3. ANÁLISIS DE COMPROMISOS — REGISTROS PRESUPUESTALES',
-        `Los compromisos ascienden a ${fmtF(t.compromiso)}, representando el ${pC.toFixed(1)}% de la apropiación vigente. `+
-        (pC>=80?`Este nivel de compromiso es alto y refleja una gestión contractual activa, donde la mayoría de los recursos apropiados cuentan con respaldo en contratos, órdenes de compra u otros actos administrativos que generan la obligación de pago.`:
-        pC>=60?`El nivel de compromisos es moderado. Esto puede indicar que existen procesos contractuales en curso o que algunos rubros aún no han iniciado su fase de ejecución. Es importante agilizar los trámites de CDP y RP para incrementar este indicador.`:
-        `El nivel de compromiso es bajo, lo que sugiere posibles retrasos en la contratación o dificultades en la gestión administrativa para la expedición de registros presupuestales. Se requiere una revisión urgente de los procesos de contratación y programación del gasto.`)+
-        ` Del monto comprometido, ${pOC.toFixed(1)}% ha sido convertido en obligaciones, `+
-        (pOC>=85?'lo cual es positivo pues indica que los contratos están siendo ejecutados y los bienes o servicios recibidos a satisfacción.':
-        pOC>=60?'lo cual indica un avance moderado en la recepción de bienes y servicios. Es necesario verificar el estado de los contratos y hacer seguimiento a los supervisores para agilizar la radicación de cuentas.':
-        'lo cual revela un represamiento significativo entre el compromiso y la causación de la obligación. Esto puede deberse a demoras en la ejecución contractual, retrasos en la radicación de cuentas por parte de contratistas, o lentitud en la gestión de Central de Cuentas.'),
-        [22,160,133]);
-
-      // ── 4. OBLIGACIONES ──
+      writeSec('1. CONTEXTO GENERAL',`La ${viewLabel} cuenta con apropiación vigente de ${fmtF(t.aprop)}, comprometida ${fmtF(t.compromiso)} (${pC.toFixed(1)}%), obligaciones ${fmtF(t.obligacion)} (${pO.toFixed(1)}%) y pagos ${fmtF(t.pagos)} (${pP.toFixed(1)}%). Nivel de ejecución ${nivelEjec}. `+(pO>=80?'La cadena del gasto fluye adecuadamente.':pO>=60?'Requiere atención para garantizar ejecución oportuna.':pO>=40?'Ritmo que podría comprometer metas presupuestales.':'Situación preocupante que requiere atención urgente.'),[27,79,114]);
+      writeSec('2. APROPIACIÓN Y DISPONIBILIDAD',`CDP expedidos por ${fmtF(t.cdp)} (${pCdp2.toFixed(1)}%). `+(pApDisp2>30?`${fmtF(sinComp)} (${pApDisp2.toFixed(1)}%) sin comprometer — recursos ociosos significativos.`:pApDisp2>10?`Saldo disponible de ${fmtF(sinComp)} (${pApDisp2.toFixed(1)}%) — moderado.`:`Solo ${fmtF(sinComp)} (${pApDisp2.toFixed(1)}%) sin comprometer — apropiación casi totalmente vinculada.`),[41,128,185]);
+      writeSec('3. COMPROMISOS (RP)',`Compromisos: ${fmtF(t.compromiso)} (${pC.toFixed(1)}%). `+(pC>=80?'Gestión contractual activa.':pC>=60?'Nivel moderado, agilizar CDP y RP.':'Nivel bajo, revisar procesos de contratación.')+` De lo comprometido, ${pOC2.toFixed(1)}% convertido en obligaciones.`,[22,160,133]);
       const diasVig=Math.ceil((new Date(new Date().getFullYear(),11,31)-new Date())/(1000*60*60*24));
-      writeSec('4. ANÁLISIS DE OBLIGACIONES — CAUSACIÓN',
-        `Las obligaciones (cuentas causadas) alcanzan ${fmtF(t.obligacion)}, correspondientes al ${pO.toFixed(1)}% de la apropiación vigente y al ${pOC.toFixed(1)}% de los compromisos adquiridos. `+
-        `La diferencia entre compromisos y obligaciones es de ${fmtF(sinOblig)}, monto que representa contratos o actos administrativos cuyos bienes o servicios aún no han sido recibidos o cuyas cuentas no han sido radicadas y tramitadas. `+
-        (sinOblig>0 && pOC<70?`Esta brecha es significativa y requiere atención inmediata: con aproximadamente ${diasVig} días restantes en la vigencia, es fundamental acelerar la radicación y trámite de cuentas en Central de Cuentas para evitar la constitución de reservas presupuestales al cierre del año. Se recomienda convocar a los supervisores de contratos para hacer seguimiento al cumplimiento de obligaciones contractuales pendientes.`:
-        sinOblig>0 && pOC<85?`Aunque la brecha no es crítica, se recomienda hacer seguimiento periódico para garantizar que las cuentas pendientes se tramiten oportunamente. La Central de Cuentas debe verificar la radicación completa de documentos soporte para agilizar la causación.`:
-        `La brecha entre compromisos y obligaciones es estrecha, lo cual indica una gestión eficiente en la causación de cuentas.`),
-        [142,68,173]);
-
-      // ── 5. PAGOS Y ÓRDENES DE PAGO ──
-      writeSec('5. ANÁLISIS DE PAGOS Y ÓRDENES DE PAGO',
-        `Los pagos efectivos suman ${fmtF(t.pagos)}, equivalentes al ${pP.toFixed(1)}% de la apropiación y al ${pOrdPag.toFixed(1)}% de las obligaciones causadas. `+
-        (pOrdPag>=90?`La relación pago/obligación es alta (${pOrdPag.toFixed(1)}%), lo cual indica que las obligaciones causadas están siendo pagadas oportunamente. La disponibilidad de PAC (Plan Anual Mensualizado de Caja) es adecuada y la tesorería está procesando las órdenes de pago con eficiencia.`:
-        pOrdPag>=70?`Existe un saldo por pagar de ${fmtF(sinPago)} correspondiente a obligaciones causadas pero no pagadas. Esto puede obedecer a restricciones de PAC o a demoras en la generación y aprobación de las órdenes de pago en SIIF Nación. Se recomienda verificar la disponibilidad de PAC y la cola de pagos en tesorería.`:
-        `El rezago en pagos es considerable: ${fmtF(sinPago)} en obligaciones no pagadas (${(100-pOrdPag).toFixed(1)}% de lo obligado). Esta situación puede generar intereses moratorios y afectar la relación con contratistas y proveedores. Es prioritario verificar la asignación de PAC, la existencia de órdenes de pago pendientes de aprobación, y la gestión de tesorería para liberar los pagos represados.`)+
-        (t.reintegros>0?` Se registran reintegros por ${fmtF(t.reintegros)}, los cuales corresponden a devoluciones de recursos ya pagados que retornan a la apropiación disponible.`:''),
-        [231,76,60]);
-
-      // ── 6. DIAGNÓSTICO Y RECOMENDACIONES ──
+      writeSec('4. OBLIGACIONES',`Obligaciones: ${fmtF(t.obligacion)} (${pO.toFixed(1)}% de apropiación, ${pOC2.toFixed(1)}% de compromisos). Diferencia compromisos-obligaciones: ${fmtF(sinOblig)}. `+(sinOblig>0&&pOC2<70?`Brecha significativa. Con ~${diasVig} días restantes, acelerar radicación en Central de Cuentas.`:sinOblig>0&&pOC2<85?'Hacer seguimiento periódico a cuentas pendientes.':'Brecha estrecha, gestión eficiente.'),[142,68,173]);
+      writeSec('5. PAGOS',`Pagos: ${fmtF(t.pagos)} (${pP.toFixed(1)}% de apropiación, ${pPO2.toFixed(1)}% de obligaciones). `+(pPO2>=90?'Relación pago/obligación alta. PAC adecuado.':pPO2>=70?`Saldo por pagar: ${fmtF(sinPago)}. Verificar PAC.`:`Rezago considerable: ${fmtF(sinPago)} sin pagar. Prioritario verificar PAC y órdenes de pago.`)+(t.reintegros>0?` Reintegros: ${fmtF(t.reintegros)}.`:''),[231,76,60]);
       const recoms=[];
-      if(pApDisp>20)recoms.push(`Reducir la brecha de ${pApDisp.toFixed(1)}% de recursos sin comprometer mediante la agilización de procesos contractuales y la expedición oportuna de CDP y RP.`);
-      if(pOC<80)recoms.push(`Incrementar la conversión de compromisos a obligaciones (actualmente ${pOC.toFixed(1)}%). Hacer seguimiento a supervisores de contratos para la recepción de bienes/servicios y radicación de cuentas en Central de Cuentas.`);
-      if(pOrdPag<90&&t.obligacion>0)recoms.push(`Mejorar el flujo de pagos (actualmente ${pOrdPag.toFixed(1)}% de lo obligado pagado). Verificar disponibilidad de PAC y agilizar la aprobación de órdenes de pago en SIIF Nación.`);
-      if(pO<60)recoms.push('Establecer mesas de trabajo semanales de seguimiento a la ejecución con todas las áreas responsables del gasto.');
-      if(pC>80&&pO<60)recoms.push('La brecha entre compromiso y obligación sugiere represamiento en Central de Cuentas. Priorizar el trámite de cuentas radicadas.');
-      recoms.push('Verificar la programación del PAC para los meses restantes de la vigencia y solicitar ajustes si es necesario.');
-      recoms.push('Revisar la constitución de cuentas por pagar y reservas presupuestales proyectadas al cierre de la vigencia.');
-
-      let diagTxt=`Con base en el análisis integral de la cadena presupuestal, el Índice de Salud Presupuestal alcanza ${score}/100 puntos (ponderación: Compromiso×0.20 + Obligación×0.45 + Pagos×0.35), clasificando la ejecución como ${score>=80?'BUENA':score>=50?'ACEPTABLE':'DEFICIENTE'}.\n\n`;
-      diagTxt+=score>=80?'La ejecución presupuestal se encuentra en niveles satisfactorios. La cadena del gasto fluye de manera adecuada desde la apropiación hasta el pago, sin evidenciar cuellos de botella críticos. Se recomienda mantener el ritmo actual de ejecución.':
-        score>=50?'La ejecución presupuestal se encuentra en un nivel aceptable pero mejorable. Se identifican oportunidades para optimizar la cadena del gasto, particularmente en las fases de obligación y pago. Es necesario implementar acciones correctivas focalizadas.':
-        'La ejecución presupuestal presenta deficiencias importantes que requieren atención prioritaria. El bajo nivel del índice refleja estancamiento en una o varias etapas de la cadena presupuestal. Se requiere un plan de acción inmediato con metas de corto plazo.';
-      diagTxt+='\n\nRECOMENDACIONES:\n\n';
-      recoms.forEach((r,i)=>{diagTxt+=`${i+1}. ${r}\n\n`;});
-      diagTxt+='Nota: Este análisis se genera automáticamente con base en los datos cargados del SIIF Nación. Se recomienda contrastar con la gestión cualitativa y las particularidades de cada rubro presupuestal. La interpretación final debe considerar el contexto operativo de la entidad.';
-
-      writeSec('6. DIAGNÓSTICO INTEGRAL Y RECOMENDACIONES', diagTxt, [201,168,76]);
+      if(pApDisp2>20)recoms.push(`Reducir brecha de ${pApDisp2.toFixed(1)}% sin comprometer.`);
+      if(pOC2<80)recoms.push(`Incrementar conversión compromisos→obligaciones (${pOC2.toFixed(1)}%).`);
+      if(pPO2<90&&t.obligacion>0)recoms.push(`Mejorar flujo de pagos (${pPO2.toFixed(1)}% pagado).`);
+      if(pO<60)recoms.push('Mesas de trabajo semanales de seguimiento.');
+      recoms.push('Verificar PAC para meses restantes.');recoms.push('Revisar reservas presupuestales proyectadas.');
+      let diagTxt=`Índice de Salud: ${score}/100 (Comp×0.20 + Oblig×0.45 + Pagos×0.35). Clasificación: ${score>=80?'BUENA':score>=50?'ACEPTABLE':'DEFICIENTE'}.\n\n`;
+      diagTxt+='RECOMENDACIONES:\n\n';recoms.forEach((r,i)=>{diagTxt+=`${i+1}. ${r}\n\n`;});
+      diagTxt+='Nota: Análisis automático basado en datos SIIF Nación. Contrastar con gestión cualitativa.';
+      writeSec('6. DIAGNÓSTICO Y RECOMENDACIONES',diagTxt,[201,168,76]);
     }
 
-    // Footer
     const lastPage=doc.internal.getNumberOfPages();
-    for(let p=1;p<=lastPage;p++){doc.setPage(p);
-      doc.setFillColor(27,79,114);doc.rect(0,H-8,W,8,'F');
-      doc.setFontSize(6);doc.setTextColor(255);
-      doc.text('Herramienta de análisis presupuestal · DESAJ Sincelejo · Rama Judicial de Colombia',14,H-3);
-      doc.text('Página '+p+' de '+lastPage,W-14,H-3,{align:'right'});
-    }
+    for(let p=1;p<=lastPage;p++){doc.setPage(p);doc.setFillColor(27,79,114);doc.rect(0,H-8,W,8,'F');doc.setFontSize(6);doc.setTextColor(255);doc.text('Herramienta de análisis presupuestal · DESAJ Sincelejo · Rama Judicial de Colombia',14,H-3);doc.text('Página '+p+' de '+lastPage,W-14,H-3,{align:'right'});}
 
-    // Output: show in embedded iframe viewer
-    const pdfBlob=doc.output('blob');
-    const url=URL.createObjectURL(pdfBlob);
-    const overlay=document.getElementById('pdfOverlay');
-    const frame=document.getElementById('pdfFrame');
-    frame.src=url;
-    overlay.hidden=false;
+    const pdfBlob=doc.output('blob');const url=URL.createObjectURL(pdfBlob);
+    document.getElementById('pdfFrame').src=url;document.getElementById('pdfOverlay').hidden=false;
   }catch(err){console.error(err);const msg=document.getElementById('uploadError');msg.hidden=false;msg.textContent='Error generando PDF: '+err.message;}
 };
 
@@ -1148,13 +1561,7 @@ window.__generarPDF=function(){
 function mkEl(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);return el;}
 function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':'var(--font-body)'});el.textContent=text;return el;}
 
-// ──── Content tabs ────
-document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',function(){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-  this.classList.add('active');
-  document.getElementById('tab-'+this.dataset.tab).classList.add('active');
-});});
-
 })();
 </script>
+</body>
+</html>
