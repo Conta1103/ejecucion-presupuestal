@@ -942,11 +942,11 @@ window.__generarPDF=function(){
     }
     if(filteredRows.length>maxRows){doc.setFontSize(6);doc.setTextColor(107,114,128);doc.text(`... y ${filteredRows.length-maxRows} filas más`,14,ty+4);ty+=8;}
 
-    // ── Analysis section ──
+    // ── Analysis section (chart analyses + narrative interpretation) ──
     const analyses=getChartAnalysesText();
     if(analyses.length){
+      // ─── PAGE: ANÁLISIS DE GRÁFICAS ───
       doc.addPage();
-      // Header bar on new page
       doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
       doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
       doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
@@ -959,34 +959,34 @@ window.__generarPDF=function(){
 
       const icons=['▼','◉','▮','◇'];
       analyses.forEach((txt,i)=>{
-        if(ay>H-30){doc.addPage();ay=14;
+        const colonIdx=txt.indexOf(':');
+        const title=colonIdx>0?txt.slice(0,colonIdx+1):'';
+        const body=colonIdx>0?txt.slice(colonIdx+1).trim():txt;
+        doc.setFont('helvetica','normal');doc.setFontSize(7);
+        const bodyLines=doc.splitTextToSize(body,W-42);
+        const boxH=Math.max(18, 10+bodyLines.length*3.5+2);
+
+        if(ay+boxH>H-18){doc.addPage();ay=14;
           doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
           doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
           doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
           doc.text('ANÁLISIS DE GRÁFICAS (continuación)',14,8);ay=22;}
 
-        // Box background
-        const boxH=18;
         doc.setFillColor(245,246,248);doc.roundedRect(14,ay,W-28,boxH,2,2,'F');
         doc.setFillColor(27,79,114);doc.rect(14,ay,2,boxH,'F');
 
-        // Title part (before colon)
-        const colonIdx=txt.indexOf(':');
-        const title=colonIdx>0?txt.slice(0,colonIdx+1):'';
-        const body=colonIdx>0?txt.slice(colonIdx+1).trim():txt;
-
-        doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(27,79,114);
+        doc.setFont('helvetica','bold');doc.setFontSize(7.5);doc.setTextColor(27,79,114);
         doc.text(icons[i]+' '+title,18,ay+6);
 
-        doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(50,50,50);
-        const lines=doc.splitTextToSize(body,W-40);
-        doc.text(lines,18,ay+11);
+        doc.setFont('helvetica','normal');doc.setFontSize(7);doc.setTextColor(50,50,50);
+        doc.text(bodyLines,18,ay+11);
 
         ay+=boxH+5;
       });
 
       // Summary box
       ay+=4;
+      if(ay+16>H-18){doc.addPage();ay=14;}
       doc.setFillColor(253,246,227);doc.roundedRect(14,ay,W-28,14,2,2,'F');
       doc.setFillColor(201,168,76);doc.rect(14,ay,2,14,'F');
       const score2=Math.min(100,Math.max(0,Math.round(pC*0.2+pO*0.45+pP*0.35)));
@@ -994,8 +994,135 @@ window.__generarPDF=function(){
       doc.setFont('helvetica','bold');doc.setFontSize(7);doc.setTextColor(160,130,40);
       doc.text(sumTxt.slice(0,sumTxt.indexOf(':')+1),18,ay+6);
       doc.setFont('helvetica','normal');doc.setFontSize(6.5);doc.setTextColor(80,70,30);
-      const sumLines=doc.splitTextToSize(sumTxt.slice(sumTxt.indexOf(':')+1).trim(),W-40);
-      doc.text(sumLines,18,ay+10);
+      const sumLines2=doc.splitTextToSize(sumTxt.slice(sumTxt.indexOf(':')+1).trim(),W-40);
+      doc.text(sumLines2,18,ay+10);
+    }
+
+    // ─── PAGE: ANÁLISIS INTERPRETATIVO DETALLADO ───
+    {
+      doc.addPage();
+      doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
+      doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
+      doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
+      doc.text('INFORME DE EJECUCIÓN PRESUPUESTAL — ANÁLISIS INTERPRETATIVO',14,8);
+      doc.setFontSize(7);doc.text(fecha,W-14,8,{align:'right'});
+
+      let ny=20;
+      const textW=W-32;
+      const fs=7.5; // font size for body text
+      const lh=3.8; // line height
+
+      // Helper: write a section with auto-page-break
+      function writeSec(titleTxt, bodyTxt, accentColor){
+        // Check if title + at least 4 lines fit
+        if(ny+20>H-18){doc.addPage();ny=14;
+          doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
+          doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
+          doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
+          doc.text('ANÁLISIS INTERPRETATIVO (continuación)',14,8);ny=20;}
+
+        // Section title with accent bar
+        doc.setFillColor(...(accentColor||[27,79,114]));
+        doc.rect(14,ny,W-28,0.8,'F');
+        ny+=4;
+        doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(...(accentColor||[27,79,114]));
+        doc.text(titleTxt,16,ny);
+        ny+=5;
+
+        // Body text
+        doc.setFont('helvetica','normal');doc.setFontSize(fs);doc.setTextColor(40,40,40);
+        const wrappedLines=doc.splitTextToSize(bodyTxt,textW);
+        wrappedLines.forEach(ln=>{
+          if(ny+lh>H-14){doc.addPage();ny=14;
+            doc.setFillColor(27,79,114);doc.rect(0,0,W,12,'F');
+            doc.setFillColor(201,168,76);doc.rect(0,12,W,1.5,'F');
+            doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
+            doc.text('ANÁLISIS INTERPRETATIVO (continuación)',14,8);ny=20;
+            doc.setFont('helvetica','normal');doc.setFontSize(fs);doc.setTextColor(40,40,40);}
+          doc.text(ln,16,ny);
+          ny+=lh;
+        });
+        ny+=4;
+      }
+
+      // Compute all needed values
+      const pCdp=pct(t.cdp,t.aprop);
+      const pApDisp=pct(t.aprop-t.compromiso,t.aprop);
+      const pOC=t.compromiso>0?pct(t.obligacion,t.compromiso):0;
+      const pPO=t.obligacion>0?pct(t.pagos,t.obligacion):0;
+      const pOrdPag=t.obligacion>0?pct(t.pagos,t.obligacion):0;
+      const sinComp=t.aprop-t.compromiso;
+      const sinOblig=t.compromiso-t.obligacion;
+      const sinPago=t.obligacion-t.pagos;
+
+      // ── 1. CONTEXTO GENERAL ──
+      const nivelEjec=pO>=80?'alta':pO>=60?'moderada':pO>=40?'baja':'muy baja';
+      writeSec('1. CONTEXTO GENERAL DE LA EJECUCIÓN PRESUPUESTAL',
+        `La ${viewLabel} cuenta con una apropiación vigente total de ${fmtF(t.aprop)}, de la cual se han comprometido ${fmtF(t.compromiso)} (${pC.toFixed(1)}%), se han causado obligaciones por ${fmtF(t.obligacion)} (${pO.toFixed(1)}%) y se han efectuado pagos por ${fmtF(t.pagos)} (${pP.toFixed(1)}%). Esto indica un nivel de ejecución presupuestal ${nivelEjec}, `+
+        (pO>=80?'lo que refleja un avance significativo en el ciclo presupuestal. La entidad está cumpliendo satisfactoriamente con los compromisos adquiridos y la cadena del gasto fluye de manera adecuada.':
+        pO>=60?'lo que evidencia un avance aceptable pero que requiere atención para garantizar que los recursos apropiados se ejecuten oportunamente antes del cierre de la vigencia fiscal. Se recomienda fortalecer la gestión en las etapas de obligación y pago.':
+        pO>=40?'lo cual evidencia un ritmo de ejecución que podría comprometer el cumplimiento de las metas presupuestales de la vigencia. Es necesario implementar un plan de aceleración que permita convertir los compromisos en obligaciones y pagos efectivos.':
+        'lo cual representa una situación preocupante que requiere atención urgente. El bajo nivel de ejecución puede derivar en constitución de reservas presupuestales significativas y en el riesgo de pérdida de recursos por no ejecución al cierre de la vigencia fiscal.'),
+        [27,79,114]);
+
+      // ── 2. APROPIACIÓN Y DISPONIBILIDAD ──
+      writeSec('2. APROPIACIÓN PRESUPUESTAL Y DISPONIBILIDAD',
+        `Del total apropiado de ${fmtF(t.aprop)}, se han expedido Certificados de Disponibilidad Presupuestal (CDP) por ${fmtF(t.cdp)}, equivalentes al ${pCdp.toFixed(1)}% de la apropiación. `+
+        (pApDisp>30?`Actualmente, ${fmtF(sinComp)} (${pApDisp.toFixed(1)}% de la apropiación) permanecen sin comprometer, lo que constituye un monto significativo de recursos ociosos. Esta situación puede obedecer a demoras en los procesos de contratación, falta de necesidades de gasto identificadas, o lentitud en la expedición de CDP y registros presupuestales. Se recomienda revisar la programación presupuestal para determinar si estos recursos requieren ser reasignados o si existen necesidades pendientes de tramitar.`:
+        pApDisp>10?`Queda un saldo disponible de ${fmtF(sinComp)} (${pApDisp.toFixed(1)}%) sin comprometer. Si bien es un porcentaje moderado, conviene verificar que estos recursos tengan destinación planificada para evitar su pérdida al cierre de la vigencia.`:
+        `Solo ${fmtF(sinComp)} (${pApDisp.toFixed(1)}%) quedan sin comprometer, lo cual indica una apropiación casi totalmente comprometida. La disponibilidad restante es mínima y la entidad ha logrado vincular la casi totalidad de sus recursos a compromisos específicos.`),
+        [41,128,185]);
+
+      // ── 3. COMPROMISOS (RP) ──
+      writeSec('3. ANÁLISIS DE COMPROMISOS — REGISTROS PRESUPUESTALES',
+        `Los compromisos ascienden a ${fmtF(t.compromiso)}, representando el ${pC.toFixed(1)}% de la apropiación vigente. `+
+        (pC>=80?`Este nivel de compromiso es alto y refleja una gestión contractual activa, donde la mayoría de los recursos apropiados cuentan con respaldo en contratos, órdenes de compra u otros actos administrativos que generan la obligación de pago.`:
+        pC>=60?`El nivel de compromisos es moderado. Esto puede indicar que existen procesos contractuales en curso o que algunos rubros aún no han iniciado su fase de ejecución. Es importante agilizar los trámites de CDP y RP para incrementar este indicador.`:
+        `El nivel de compromiso es bajo, lo que sugiere posibles retrasos en la contratación o dificultades en la gestión administrativa para la expedición de registros presupuestales. Se requiere una revisión urgente de los procesos de contratación y programación del gasto.`)+
+        ` Del monto comprometido, ${pOC.toFixed(1)}% ha sido convertido en obligaciones, `+
+        (pOC>=85?'lo cual es positivo pues indica que los contratos están siendo ejecutados y los bienes o servicios recibidos a satisfacción.':
+        pOC>=60?'lo cual indica un avance moderado en la recepción de bienes y servicios. Es necesario verificar el estado de los contratos y hacer seguimiento a los supervisores para agilizar la radicación de cuentas.':
+        'lo cual revela un represamiento significativo entre el compromiso y la causación de la obligación. Esto puede deberse a demoras en la ejecución contractual, retrasos en la radicación de cuentas por parte de contratistas, o lentitud en la gestión de Central de Cuentas.'),
+        [22,160,133]);
+
+      // ── 4. OBLIGACIONES ──
+      const diasVig=Math.ceil((new Date(new Date().getFullYear(),11,31)-new Date())/(1000*60*60*24));
+      writeSec('4. ANÁLISIS DE OBLIGACIONES — CAUSACIÓN',
+        `Las obligaciones (cuentas causadas) alcanzan ${fmtF(t.obligacion)}, correspondientes al ${pO.toFixed(1)}% de la apropiación vigente y al ${pOC.toFixed(1)}% de los compromisos adquiridos. `+
+        `La diferencia entre compromisos y obligaciones es de ${fmtF(sinOblig)}, monto que representa contratos o actos administrativos cuyos bienes o servicios aún no han sido recibidos o cuyas cuentas no han sido radicadas y tramitadas. `+
+        (sinOblig>0 && pOC<70?`Esta brecha es significativa y requiere atención inmediata: con aproximadamente ${diasVig} días restantes en la vigencia, es fundamental acelerar la radicación y trámite de cuentas en Central de Cuentas para evitar la constitución de reservas presupuestales al cierre del año. Se recomienda convocar a los supervisores de contratos para hacer seguimiento al cumplimiento de obligaciones contractuales pendientes.`:
+        sinOblig>0 && pOC<85?`Aunque la brecha no es crítica, se recomienda hacer seguimiento periódico para garantizar que las cuentas pendientes se tramiten oportunamente. La Central de Cuentas debe verificar la radicación completa de documentos soporte para agilizar la causación.`:
+        `La brecha entre compromisos y obligaciones es estrecha, lo cual indica una gestión eficiente en la causación de cuentas.`),
+        [142,68,173]);
+
+      // ── 5. PAGOS Y ÓRDENES DE PAGO ──
+      writeSec('5. ANÁLISIS DE PAGOS Y ÓRDENES DE PAGO',
+        `Los pagos efectivos suman ${fmtF(t.pagos)}, equivalentes al ${pP.toFixed(1)}% de la apropiación y al ${pOrdPag.toFixed(1)}% de las obligaciones causadas. `+
+        (pOrdPag>=90?`La relación pago/obligación es alta (${pOrdPag.toFixed(1)}%), lo cual indica que las obligaciones causadas están siendo pagadas oportunamente. La disponibilidad de PAC (Plan Anual Mensualizado de Caja) es adecuada y la tesorería está procesando las órdenes de pago con eficiencia.`:
+        pOrdPag>=70?`Existe un saldo por pagar de ${fmtF(sinPago)} correspondiente a obligaciones causadas pero no pagadas. Esto puede obedecer a restricciones de PAC o a demoras en la generación y aprobación de las órdenes de pago en SIIF Nación. Se recomienda verificar la disponibilidad de PAC y la cola de pagos en tesorería.`:
+        `El rezago en pagos es considerable: ${fmtF(sinPago)} en obligaciones no pagadas (${(100-pOrdPag).toFixed(1)}% de lo obligado). Esta situación puede generar intereses moratorios y afectar la relación con contratistas y proveedores. Es prioritario verificar la asignación de PAC, la existencia de órdenes de pago pendientes de aprobación, y la gestión de tesorería para liberar los pagos represados.`)+
+        (t.reintegros>0?` Se registran reintegros por ${fmtF(t.reintegros)}, los cuales corresponden a devoluciones de recursos ya pagados que retornan a la apropiación disponible.`:''),
+        [231,76,60]);
+
+      // ── 6. DIAGNÓSTICO Y RECOMENDACIONES ──
+      const recoms=[];
+      if(pApDisp>20)recoms.push(`Reducir la brecha de ${pApDisp.toFixed(1)}% de recursos sin comprometer mediante la agilización de procesos contractuales y la expedición oportuna de CDP y RP.`);
+      if(pOC<80)recoms.push(`Incrementar la conversión de compromisos a obligaciones (actualmente ${pOC.toFixed(1)}%). Hacer seguimiento a supervisores de contratos para la recepción de bienes/servicios y radicación de cuentas en Central de Cuentas.`);
+      if(pOrdPag<90&&t.obligacion>0)recoms.push(`Mejorar el flujo de pagos (actualmente ${pOrdPag.toFixed(1)}% de lo obligado pagado). Verificar disponibilidad de PAC y agilizar la aprobación de órdenes de pago en SIIF Nación.`);
+      if(pO<60)recoms.push('Establecer mesas de trabajo semanales de seguimiento a la ejecución con todas las áreas responsables del gasto.');
+      if(pC>80&&pO<60)recoms.push('La brecha entre compromiso y obligación sugiere represamiento en Central de Cuentas. Priorizar el trámite de cuentas radicadas.');
+      recoms.push('Verificar la programación del PAC para los meses restantes de la vigencia y solicitar ajustes si es necesario.');
+      recoms.push('Revisar la constitución de cuentas por pagar y reservas presupuestales proyectadas al cierre de la vigencia.');
+
+      let diagTxt=`Con base en el análisis integral de la cadena presupuestal, el Índice de Salud Presupuestal alcanza ${score}/100 puntos (ponderación: Compromiso×0.20 + Obligación×0.45 + Pagos×0.35), clasificando la ejecución como ${score>=80?'BUENA':score>=50?'ACEPTABLE':'DEFICIENTE'}.\n\n`;
+      diagTxt+=score>=80?'La ejecución presupuestal se encuentra en niveles satisfactorios. La cadena del gasto fluye de manera adecuada desde la apropiación hasta el pago, sin evidenciar cuellos de botella críticos. Se recomienda mantener el ritmo actual de ejecución.':
+        score>=50?'La ejecución presupuestal se encuentra en un nivel aceptable pero mejorable. Se identifican oportunidades para optimizar la cadena del gasto, particularmente en las fases de obligación y pago. Es necesario implementar acciones correctivas focalizadas.':
+        'La ejecución presupuestal presenta deficiencias importantes que requieren atención prioritaria. El bajo nivel del índice refleja estancamiento en una o varias etapas de la cadena presupuestal. Se requiere un plan de acción inmediato con metas de corto plazo.';
+      diagTxt+='\n\nRECOMENDACIONES:\n\n';
+      recoms.forEach((r,i)=>{diagTxt+=`${i+1}. ${r}\n\n`;});
+      diagTxt+='Nota: Este análisis se genera automáticamente con base en los datos cargados del SIIF Nación. Se recomienda contrastar con la gestión cualitativa y las particularidades de cada rubro presupuestal. La interpretación final debe considerar el contexto operativo de la entidad.';
+
+      writeSec('6. DIAGNÓSTICO INTEGRAL Y RECOMENDACIONES', diagTxt, [201,168,76]);
     }
 
     // Footer
