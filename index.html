@@ -714,6 +714,65 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 }
 .bottom-bar span { color: var(--gold); font-weight: 600; }
 
+/* ═══════ NÓMINA MODULE ═══════ */
+.nomina-drop {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 36px 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--surface);
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.nomina-drop:hover, .nomina-drop.dragover { border-color: var(--accent); background: var(--accent-light); }
+.nomina-drop .drop-icon { font-size: 2rem; color: var(--muted); }
+.nomina-drop .drop-label { font-size: 0.88rem; font-weight: 600; color: var(--fg); }
+.nomina-drop .drop-hint { font-size: 0.75rem; color: var(--muted); }
+.nomina-file-list { margin-top: 12px; display: flex; flex-direction: column; gap: 6px; }
+.nomina-file-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; background: var(--surface-alt);
+  border-radius: 8px; font-size: 0.82rem;
+}
+.nomina-file-item .file-name { flex: 1; font-weight: 500; }
+.nomina-file-item .file-pages { font-size: 0.72rem; color: var(--muted); }
+.nomina-file-item .file-remove {
+  background: none; border: none; cursor: pointer;
+  color: var(--muted); font-size: 1rem; padding: 2px 5px; border-radius: 4px;
+}
+.nomina-file-item .file-remove:hover { background: var(--sem-rojo-bg); color: var(--sem-rojo); }
+.btn-nomina {
+  background: linear-gradient(135deg, #8E44AD, #6C3483);
+  border: none; color: #fff;
+  padding: 10px 22px; border-radius: 8px;
+  font-size: 0.85rem; font-weight: 600;
+  cursor: pointer; font-family: var(--font-body);
+  display: inline-flex; align-items: center; gap: 8px;
+  margin-top: 14px; transition: all 0.2s;
+  box-shadow: 0 2px 8px rgba(142,68,173,0.3);
+}
+.btn-nomina:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(142,68,173,0.4); }
+.btn-nomina:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+.nomina-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+.nomina-summary { margin-bottom: 18px; }
+.diff-pos { color: var(--sem-verde); font-weight: 600; }
+.diff-neg { color: var(--sem-rojo); font-weight: 600; }
+.diff-zero { color: var(--muted); }
+.nomina-raw { background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-top: 14px; max-height: 300px; overflow-y: auto; font-size: 0.72rem; font-family: monospace; white-space: pre-wrap; line-height: 1.4; color: var(--muted); display: none; }
+.nomina-raw.show { display: block; }
+.btn-toggle-raw {
+  background: var(--surface-alt); border: 1px solid var(--border);
+  color: var(--muted); padding: 6px 14px; border-radius: 6px;
+  font-size: 0.75rem; cursor: pointer; font-family: var(--font-body);
+  margin-top: 10px;
+}
+
 /* ═══════ RESPONSIVE ═══════ */
 @media (max-width: 1100px) {
   .dash-grid { grid-template-columns: 1fr; }
@@ -768,6 +827,9 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
     </button>
     <button class="nav-item" data-section="comparativo" onclick="navTo(this)">
       <span class="nav-icon">🔄</span> Comparativo UE
+    </button>
+    <button class="nav-item" data-section="nomina" onclick="navTo(this)">
+      <span class="nav-icon">💼</span> Nómina
     </button>
     <button class="nav-item" data-section="auditoria" onclick="navTo(this)">
       <span class="nav-icon">🔍</span> Auditoría
@@ -999,6 +1061,101 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
       </div>
     </div>
 
+    <!-- ═══════ SECTION: NÓMINA ═══════ -->
+    <div class="section" id="sec-nomina">
+      <div class="card" style="margin-bottom:18px;">
+        <div class="card-header">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 5L8 2 5 5M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Cargar PDFs — Centro de Costos (Nómina)
+        </div>
+        <div class="card-body">
+          <div class="nomina-drop" id="nominaDrop">
+            <span class="drop-icon">📋</span>
+            <span class="drop-label">Arrastra PDFs de Centro de Costos aquí</span>
+            <span class="drop-hint">Acepta múltiples archivos PDF del reporte de centro de costos SIIF</span>
+          </div>
+          <input type="file" id="nominaFileInput" accept=".pdf" multiple style="display:none;">
+          <div class="nomina-file-list" id="nominaFileList"></div>
+          <div id="nominaUploadError" hidden style="margin-top:12px;padding:10px 14px;background:var(--sem-rojo-bg);border-radius:8px;font-size:.82rem;color:var(--sem-rojo);"></div>
+          <button class="btn-nomina" id="btnProcesarNomina" disabled onclick="window.__procesarNomina()">
+            ⚙ Procesar y Comparar con Apropiación
+          </button>
+          <p style="font-size:.75rem;color:var(--muted);margin-top:10px;line-height:1.6;">
+            <strong>Instrucciones:</strong> Carga los reportes PDF de centro de costos del SIIF Nación.
+            El sistema extraerá los rubros y montos de nómina para compararlos contra la apropiación vigente cargada en los archivos Excel.
+            <br><strong>Requisito:</strong> Debes tener al menos una UE cargada en "Cargar Archivos" para realizar la comparación.
+          </p>
+        </div>
+      </div>
+
+      <div id="nominaResults" hidden>
+        <!-- KPI Summary -->
+        <div class="nomina-kpi-row" id="nominaKpiRow">
+          <div class="kpi-card azul">
+            <div class="kpi-top"><div class="kpi-icon blue">💰</div></div>
+            <div class="kpi-label">Apropiación Nómina</div>
+            <div class="kpi-value" id="nkAprop">$0</div>
+            <div class="kpi-sub" id="nkApropSub">Rubros de personal</div>
+          </div>
+          <div class="kpi-card" id="nkCcCard">
+            <div class="kpi-top"><div class="kpi-icon" style="background:rgba(142,68,173,0.1);color:#8E44AD;">📋</div></div>
+            <div class="kpi-label">Centro de Costos</div>
+            <div class="kpi-value" id="nkCc">$0</div>
+            <div class="kpi-sub" id="nkCcSub">Total nómina PDF</div>
+          </div>
+          <div class="kpi-card" id="nkDiffCard">
+            <div class="kpi-top"><div class="kpi-icon yellow">⚖</div></div>
+            <div class="kpi-label">Diferencia</div>
+            <div class="kpi-value" id="nkDiff">$0</div>
+            <div class="kpi-sub" id="nkDiffSub">Aprop. − Nómina</div>
+          </div>
+          <div class="kpi-card" id="nkPctCard">
+            <div class="kpi-top"><div class="kpi-icon green">📊</div></div>
+            <div class="kpi-label">% Ejecución Nómina</div>
+            <div class="kpi-value" id="nkPct">0%</div>
+            <div class="kpi-sub" id="nkPctSub">Nómina / Apropiación</div>
+          </div>
+        </div>
+
+        <!-- Comparison Table -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header">📊 Comparativo Apropiación vs Centro de Costos</div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table id="tablaNomina">
+                <thead><tr>
+                  <th>Código</th><th>Concepto</th><th class="num">Apropiación</th>
+                  <th class="num">Centro Costos</th><th class="num">Diferencia</th>
+                  <th class="num">% Ejec.</th><th>Estado</th>
+                </tr></thead>
+                <tbody id="tbodyNomina"></tbody>
+                <tfoot id="tfootNomina"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nomina Alerts -->
+        <div class="card" style="margin-bottom:18px;">
+          <div class="card-header">🔍 Alertas de Nómina</div>
+          <div class="card-body">
+            <div class="alert-list" id="nominaAlerts"></div>
+          </div>
+        </div>
+
+        <!-- Raw Text Toggle -->
+        <div class="card">
+          <div class="card-header">📄 Datos Extraídos del PDF</div>
+          <div class="card-body">
+            <button class="btn-toggle-raw" onclick="document.getElementById('nominaRawText').classList.toggle('show')">
+              ▸ Ver/Ocultar texto extraído del PDF
+            </button>
+            <div class="nomina-raw" id="nominaRawText"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════ SECTION: AUDITORÍA ═══════ -->
     <div class="section" id="sec-auditoria">
       <div class="card">
@@ -1029,6 +1186,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1560,6 +1718,355 @@ window.__generarPDF=function(){
 // ──── SVG helpers ────
 function mkEl(tag,attrs){const el=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))el.setAttribute(k,v);return el;}
 function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':'var(--font-body)'});el.textContent=text;return el;}
+
+// ══════════════════════════════════════════════
+// ═══════ MÓDULO NÓMINA — CENTRO DE COSTOS ═══════
+// ══════════════════════════════════════════════
+(function initNomina(){
+  // PDF.js worker
+  if(typeof pdfjsLib!=='undefined'){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+
+  const nominaPdfs=[]; // [{name, pages, text, parsed}]
+  const dropZone=document.getElementById('nominaDrop');
+  const fileInput=document.getElementById('nominaFileInput');
+  const fileList=document.getElementById('nominaFileList');
+  const btnProc=document.getElementById('btnProcesarNomina');
+  const errEl=document.getElementById('nominaUploadError');
+
+  // ─── Drag & drop + click ───
+  dropZone.addEventListener('click',()=>fileInput.click());
+  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
+  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleNominaFiles(e.dataTransfer.files);});
+  fileInput.addEventListener('change',()=>{handleNominaFiles(fileInput.files);fileInput.value='';});
+
+  function handleNominaFiles(files){
+    Array.from(files).forEach(f=>{
+      if(!f.name.toLowerCase().endsWith('.pdf')){errEl.hidden=false;errEl.textContent='Solo se aceptan archivos PDF.';return;}
+      errEl.hidden=true;
+      const reader=new FileReader();
+      reader.onload=async e=>{
+        try{
+          const typedArr=new Uint8Array(e.target.result);
+          const pdf=await pdfjsLib.getDocument({data:typedArr}).promise;
+          let fullText='';
+          for(let p=1;p<=pdf.numPages;p++){
+            const page=await pdf.getPage(p);
+            const content=await page.getTextContent();
+            const lines=[];
+            let lastY=null;
+            content.items.forEach(item=>{
+              const y=Math.round(item.transform[5]);
+              if(lastY!==null&&Math.abs(y-lastY)>3){lines.push('\n');}
+              lines.push(item.str);
+              lastY=y;
+            });
+            fullText+=lines.join(' ')+'\n--- Página '+p+' ---\n';
+          }
+          nominaPdfs.push({name:f.name,pages:pdf.numPages,text:fullText,parsed:null});
+          renderNominaFileList();
+        }catch(ex){
+          errEl.hidden=false;errEl.textContent='Error leyendo '+f.name+': '+ex.message;
+        }
+      };
+      reader.readAsArrayBuffer(f);
+    });
+  }
+
+  function renderNominaFileList(){
+    fileList.innerHTML='';
+    nominaPdfs.forEach((pdf,i)=>{
+      const div=document.createElement('div');
+      div.className='nomina-file-item';
+      div.innerHTML=`<span style="font-size:1.1rem">📄</span><span class="file-name">${pdf.name}</span><span class="file-pages">${pdf.pages} pág.</span><button class="file-remove" onclick="window.__removeNominaPdf(${i})">✕</button>`;
+      fileList.appendChild(div);
+    });
+    btnProc.disabled=nominaPdfs.length===0;
+  }
+
+  window.__removeNominaPdf=function(idx){
+    nominaPdfs.splice(idx,1);
+    renderNominaFileList();
+    if(nominaPdfs.length===0)document.getElementById('nominaResults').hidden=true;
+  };
+
+  // ─── Parse centro de costos text ───
+  function parseCentroCostos(text){
+    const lines=text.split('\n');
+    const rows=[];
+    // Colombian money pattern: digits with dots as thousands, optional comma+decimals
+    // e.g. 1.234.567.890 or 1.234.567,89 or 1234567890
+    const moneyRe=/(?:^|[\s,])(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)(?:[\s,]|$)/g;
+    // Rubro code pattern: A-XX or C-XX style, or just sequences like A 01 02 03
+    const rubroRe=/\b([AC])\s*[-–]?\s*(\d{1,2})\s*[-–]?\s*(\d{1,2})\s*[-–]?\s*(\d{1,2})(?:\s*[-–]?\s*(\d{1,3}))?(?:\s*[-–]?\s*(\d{1,3}))?\b/i;
+    // Also try to match just numeric rubro fragments
+    const numRubroRe=/^(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})(?:\s+(\d{1,3}))?/;
+
+    let currentUnit='';
+    // Detect unit name
+    lines.forEach(line=>{
+      const uMatch=line.match(/UNIDAD\s+EJECUTORA[:\s]+(.+)/i);
+      if(uMatch)currentUnit=uMatch[1].trim();
+    });
+
+    lines.forEach((line,idx)=>{
+      const trimmed=line.trim();
+      if(!trimmed||trimmed.startsWith('---'))return;
+      // Skip header-like lines
+      if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|CODIGO|CÓDIGO|RUBRO|CENTRO|Total|TOTAL)\s*$/i.test(trimmed))return;
+
+      // Try to match a rubro code
+      let rubroMatch=trimmed.match(rubroRe);
+      let codigo='',concepto='';
+
+      if(rubroMatch){
+        const parts=[rubroMatch[1].toUpperCase(),rubroMatch[2],rubroMatch[3],rubroMatch[4]];
+        if(rubroMatch[5])parts.push(rubroMatch[5]);
+        if(rubroMatch[6])parts.push(rubroMatch[6]);
+        codigo=parts.join('-');
+        // Extract concept text (everything after the rubro code up to the first number)
+        const afterRubro=trimmed.slice(trimmed.indexOf(rubroMatch[0])+rubroMatch[0].length);
+        const conceptMatch=afterRubro.match(/^\s*([A-ZÁÉÍÓÚÑa-záéíóúñ\s.,()/-]+)/);
+        if(conceptMatch)concepto=conceptMatch[1].trim();
+      }
+
+      // Extract monetary values
+      const moneyValues=[];
+      let m;
+      const moneyCopy=trimmed;
+      const globalMoneyRe=/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)/g;
+      while((m=globalMoneyRe.exec(moneyCopy))!==null){
+        let val=m[1];
+        // Convert Colombian format to number
+        if(val.includes(',')){
+          val=val.replace(/\./g,'').replace(',','.');
+        }else if((val.match(/\./g)||[]).length>1){
+          val=val.replace(/\./g,'');
+        }else if(val.includes('.')&&val.length>4){
+          // Single dot, but could be thousands separator
+          const parts=val.split('.');
+          if(parts[1]&&parts[1].length===3)val=val.replace('.','');
+        }
+        const num=parseFloat(val);
+        if(!isNaN(num)&&num>0)moneyValues.push(num);
+      }
+
+      if(codigo&&moneyValues.length>0){
+        // Take the largest value as the main amount (usually the total)
+        const amount=Math.max(...moneyValues);
+        rows.push({codigo,concepto,amount,line:trimmed,lineNum:idx+1});
+      }
+    });
+
+    // Consolidate rows with same código
+    const map=new Map();
+    rows.forEach(r=>{
+      if(map.has(r.codigo)){
+        const existing=map.get(r.codigo);
+        existing.amount+=r.amount;
+        if(!existing.concepto&&r.concepto)existing.concepto=r.concepto;
+      }else{
+        map.set(r.codigo,{...r});
+      }
+    });
+
+    return{unit:currentUnit,rows:[...map.values()]};
+  }
+
+  // ─── Process and compare ───
+  window.__procesarNomina=function(){
+    errEl.hidden=true;
+    const loaded=unitFiles.filter(Boolean);
+    if(!loaded.length){errEl.hidden=false;errEl.textContent='Primero carga al menos un archivo Excel de ejecución presupuestal.';return;}
+    if(!nominaPdfs.length){errEl.hidden=false;errEl.textContent='Carga al menos un PDF de centro de costos.';return;}
+
+    // Combine all PDF texts
+    let allText='';
+    let allParsed=[];
+    nominaPdfs.forEach(pdf=>{
+      const parsed=parseCentroCostos(pdf.text);
+      pdf.parsed=parsed;
+      allText+=pdf.text+'\n\n';
+      allParsed=allParsed.concat(parsed.rows);
+    });
+
+    // Consolidate parsed rows
+    const ccMap=new Map();
+    allParsed.forEach(r=>{
+      const key=r.codigo;
+      if(ccMap.has(key)){
+        const e=ccMap.get(key);
+        e.amount+=r.amount;
+        if(!e.concepto&&r.concepto)e.concepto=r.concepto;
+      }else{
+        ccMap.set(key,{...r});
+      }
+    });
+    const ccRows=[...ccMap.values()];
+
+    // Get SIIF rows (all loaded units consolidated)
+    const siifRows=loaded.flatMap(u=>u.rows);
+    // Build SIIF map by código
+    const siifMap=new Map();
+    siifRows.forEach(r=>{
+      if(siifMap.has(r.codigo)){
+        const e=siifMap.get(r.codigo);
+        e.aprop+=r.aprop;e.compromiso+=r.compromiso;e.obligacion+=r.obligacion;e.pagos+=r.pagos;
+      }else{
+        siifMap.set(r.codigo,{codigo:r.codigo,concepto:r.concepto,aprop:r.aprop,compromiso:r.compromiso,obligacion:r.obligacion,pagos:r.pagos,level:r.level,tipo:r.tipo});
+      }
+    });
+
+    // Build comparison rows
+    const compRows=[];
+    const matchedCodes=new Set();
+
+    // Match CC rows against SIIF
+    ccRows.forEach(cc=>{
+      const siif=siifMap.get(cc.codigo);
+      if(siif){
+        matchedCodes.add(cc.codigo);
+        compRows.push({
+          codigo:cc.codigo,
+          concepto:siif.concepto||cc.concepto,
+          aprop:siif.aprop,
+          nomina:cc.amount,
+          diff:siif.aprop-cc.amount,
+          pctEjec:siif.aprop>0?(cc.amount/siif.aprop*100):0,
+          level:siif.level,
+          matched:true
+        });
+      }else{
+        // Try partial matching (first 4-5 segments)
+        let bestMatch=null;
+        const ccParts=cc.codigo.split('-');
+        for(const[key,val]of siifMap){
+          const sParts=key.split('-');
+          const minLen=Math.min(ccParts.length,sParts.length,4);
+          let match=true;
+          for(let i=0;i<minLen;i++){
+            if(ccParts[i]!==sParts[i]){match=false;break;}
+          }
+          if(match&&minLen>=3&&(!bestMatch||sParts.length>bestMatch.parts)){
+            bestMatch={codigo:key,data:val,parts:sParts.length};
+          }
+        }
+        if(bestMatch&&!matchedCodes.has(bestMatch.codigo)){
+          matchedCodes.add(bestMatch.codigo);
+          compRows.push({
+            codigo:cc.codigo,
+            concepto:bestMatch.data.concepto||cc.concepto,
+            aprop:bestMatch.data.aprop,
+            nomina:cc.amount,
+            diff:bestMatch.data.aprop-cc.amount,
+            pctEjec:bestMatch.data.aprop>0?(cc.amount/bestMatch.data.aprop*100):0,
+            level:bestMatch.data.level,
+            matched:true,
+            partialMatch:bestMatch.codigo
+          });
+        }else{
+          compRows.push({
+            codigo:cc.codigo,
+            concepto:cc.concepto||'(Solo en Centro de Costos)',
+            aprop:0,
+            nomina:cc.amount,
+            diff:-cc.amount,
+            pctEjec:0,
+            level:4,
+            matched:false
+          });
+        }
+      }
+    });
+
+    // Sort by código
+    compRows.sort((a,b)=>a.codigo.localeCompare(b.codigo));
+
+    // Calculate totals
+    const totAprop=compRows.reduce((s,r)=>s+r.aprop,0);
+    const totNomina=compRows.reduce((s,r)=>s+r.nomina,0);
+    const totDiff=totAprop-totNomina;
+    const totPct=totAprop>0?(totNomina/totAprop*100):0;
+
+    // Render KPIs
+    document.getElementById('nkAprop').textContent=fmtM(totAprop);
+    document.getElementById('nkApropSub').textContent=compRows.filter(r=>r.matched).length+' rubros encontrados';
+    document.getElementById('nkCc').textContent=fmtM(totNomina);
+    document.getElementById('nkCcSub').textContent=ccRows.length+' rubros en PDF';
+    document.getElementById('nkDiff').textContent=fmtM(totDiff);
+    document.getElementById('nkDiffSub').textContent=totDiff>=0?'Saldo a favor':'Déficit';
+    const nkDiffCard=document.getElementById('nkDiffCard');
+    nkDiffCard.className='kpi-card '+(totDiff>=0?'verde':'rojo');
+    document.getElementById('nkPct').textContent=totPct.toFixed(1)+'%';
+    document.getElementById('nkPctSub').textContent='Nómina / Apropiación';
+    const nkPctCard=document.getElementById('nkPctCard');
+    nkPctCard.className='kpi-card '+semCls(totPct);
+
+    // Render table
+    const tbody=document.getElementById('tbodyNomina');
+    const tfoot=document.getElementById('tfootNomina');
+    tbody.innerHTML='';tfoot.innerHTML='';
+
+    compRows.forEach(r=>{
+      const p=r.pctEjec;const sc=r.matched?semCls(p):'azul';
+      const diffCls=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-zero';
+      let lc='';if(r.level<=1)lc='level-1';else if(r.level===2)lc='level-2';else if(r.level===3)lc='level-3';
+      const tr=document.createElement('tr');tr.className=lc;
+      tr.innerHTML=`
+        <td style="font-size:.72rem;color:var(--muted)">${r.codigo}${r.partialMatch?' ≈':''}${!r.matched?' ⚠':''}</td>
+        <td style="white-space:normal;min-width:140px;max-width:280px">${r.concepto||'—'}</td>
+        <td class="num">${r.aprop>0?fmtF(r.aprop):'—'}</td>
+        <td class="num">${fmtF(r.nomina)}</td>
+        <td class="num ${diffCls}">${r.diff>=0?'+':''}${fmtF(r.diff)}</td>
+        <td class="num"><div class="prog-bar"><div class="prog-fill" style="width:${Math.min(p,100)}%;background:${p>=80?'var(--sem-verde)':p>=50?'var(--sem-amarillo)':'var(--sem-rojo)'}"></div></div>${p.toFixed(1)}%</td>
+        <td><span class="sem sem-${sc}"><span class="sem-dot"></span>${r.matched?semLbl(p):'Sin match'}</span></td>`;
+      tbody.appendChild(tr);
+    });
+
+    // Footer totals
+    const tpT=totAprop>0?(totNomina/totAprop*100):0;const stc=semCls(tpT);
+    tfoot.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
+      <td colspan="2">TOTAL</td>
+      <td class="num">${fmtF(totAprop)}</td>
+      <td class="num">${fmtF(totNomina)}</td>
+      <td class="num ${totDiff>=0?'diff-pos':'diff-neg'}">${totDiff>=0?'+':''}${fmtF(totDiff)}</td>
+      <td class="num">${tpT.toFixed(1)}%</td>
+      <td><span class="sem sem-${stc}"><span class="sem-dot"></span>${semLbl(tpT)}</span></td>
+    </tr>`;
+
+    // Render alerts
+    const alerts=[];
+    const unmatched=compRows.filter(r=>!r.matched);
+    if(unmatched.length)alerts.push({level:'media',icon:'⚠',msg:`${unmatched.length} rubro(s) del centro de costos no encontrados en la apropiación SIIF: ${unmatched.slice(0,3).map(r=>r.codigo).join(', ')}${unmatched.length>3?' y otros':''}.`});
+
+    const overExec=compRows.filter(r=>r.matched&&r.pctEjec>100);
+    if(overExec.length)alerts.push({level:'critica',icon:'🚨',msg:`${overExec.length} rubro(s) con nómina superior a apropiación: ${overExec.slice(0,3).map(r=>r.codigo+' ('+r.pctEjec.toFixed(0)+'%)').join(', ')}.`});
+
+    const lowExec=compRows.filter(r=>r.matched&&r.pctEjec<50&&r.aprop>1e6);
+    if(lowExec.length)alerts.push({level:'media',icon:'📋',msg:`${lowExec.length} rubro(s) con ejecución de nómina <50% de la apropiación.`});
+
+    if(totDiff<0)alerts.push({level:'critica',icon:'💰',msg:`Déficit global: la nómina supera la apropiación en ${fmtM(Math.abs(totDiff))}.`});
+    else if(totDiff>0&&totPct<70)alerts.push({level:'media',icon:'⚡',msg:`Saldo no ejecutado de ${fmtM(totDiff)} (${(100-totPct).toFixed(1)}% sin cubrir en nómina).`});
+
+    if(compRows.filter(r=>r.partialMatch).length)alerts.push({level:'info',icon:'🔗',msg:`${compRows.filter(r=>r.partialMatch).length} rubro(s) emparejados por coincidencia parcial de código (≈). Verificar manualmente.`});
+
+    if(!alerts.length)alerts.push({level:'info',icon:'✅',msg:'Comparativo dentro de parámetros normales. Sin alertas.'});
+
+    const alertEl=document.getElementById('nominaAlerts');alertEl.innerHTML='';
+    alerts.forEach(a=>{
+      alertEl.insertAdjacentHTML('beforeend',`<div class="alert-item ${a.level}"><span class="alert-icon">${a.icon}</span><span>${a.msg}</span></div>`);
+    });
+
+    // Show raw text
+    document.getElementById('nominaRawText').textContent=allText.slice(0,10000)+(allText.length>10000?'\n\n... (texto truncado)':'');
+
+    // Show results
+    document.getElementById('nominaResults').hidden=false;
+  };
+
+})();
 
 })();
 </script>
