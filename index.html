@@ -1736,11 +1736,13 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
   const errEl=document.getElementById('nominaUploadError');
 
   // ─── Drag & drop + click ───
-  dropZone.addEventListener('click',()=>fileInput.click());
-  dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
-  dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
-  dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleNominaFiles(e.dataTransfer.files);});
-  fileInput.addEventListener('change',()=>{handleNominaFiles(fileInput.files);fileInput.value='';});
+  if(dropZone){
+    dropZone.addEventListener('click',()=>fileInput.click());
+    dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('dragover');});
+    dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('dragover'));
+    dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('dragover');handleNominaFiles(e.dataTransfer.files);});
+  }
+  if(fileInput) fileInput.addEventListener('change',()=>{handleNominaFiles(fileInput.files);fileInput.value='';});
 
   function handleNominaFiles(files){
     Array.from(files).forEach(f=>{
@@ -1755,15 +1757,33 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
           for(let p=1;p<=pdf.numPages;p++){
             const page=await pdf.getPage(p);
             const content=await page.getTextContent();
-            const lines=[];
-            let lastY=null;
-            content.items.forEach(item=>{
-              const y=Math.round(item.transform[5]);
-              if(lastY!==null&&Math.abs(y-lastY)>3){lines.push('\n');}
-              lines.push(item.str);
-              lastY=y;
+            // Reconstruir líneas usando posición Y, ordenando por X dentro de cada línea
+            const items=content.items.map(it=>({str:it.str,x:Math.round(it.transform[4]),y:Math.round(it.transform[5]),w:it.width||0}));
+            // Agrupar por Y (tolerancia 3px)
+            const lineMap=new Map();
+            items.forEach(it=>{
+              let foundY=null;
+              for(const ky of lineMap.keys()){if(Math.abs(ky-it.y)<=3){foundY=ky;break;}}
+              if(foundY!==null)lineMap.get(foundY).push(it);
+              else lineMap.set(it.y,[it]);
             });
-            fullText+=lines.join(' ')+'\n--- Página '+p+' ---\n';
+            // Ordenar líneas de arriba a abajo (Y mayor = arriba en PDF)
+            const sortedYs=[...lineMap.keys()].sort((a,b)=>b-a);
+            sortedYs.forEach(y=>{
+              const lineItems=lineMap.get(y).sort((a,b)=>a.x-b.x);
+              // Insertar separadores tab cuando hay espacio grande entre items
+              let lineStr='';
+              lineItems.forEach((it,idx)=>{
+                if(idx>0){
+                  const prevEnd=lineItems[idx-1].x+(lineItems[idx-1].w||0);
+                  const gap=it.x-prevEnd;
+                  lineStr+= gap>15 ? '\t' : (gap>3 ? ' ' : '');
+                }
+                lineStr+=it.str;
+              });
+              fullText+=lineStr+'\n';
+            });
+            fullText+='--- Página '+p+' ---\n';
           }
           nominaPdfs.push({name:f.name,pages:pdf.numPages,text:fullText,parsed:null});
           renderNominaFileList();
@@ -1783,96 +1803,189 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
       div.innerHTML=`<span style="font-size:1.1rem">📄</span><span class="file-name">${pdf.name}</span><span class="file-pages">${pdf.pages} pág.</span><button class="file-remove" onclick="window.__removeNominaPdf(${i})">✕</button>`;
       fileList.appendChild(div);
     });
-    btnProc.disabled=nominaPdfs.length===0;
+    if(btnProc) btnProc.disabled=nominaPdfs.length===0;
   }
 
   window.__removeNominaPdf=function(idx){
     nominaPdfs.splice(idx,1);
     renderNominaFileList();
-    if(nominaPdfs.length===0)document.getElementById('nominaResults').hidden=true;
+    if(nominaPdfs.length===0){const r=document.getElementById('nominaResults');if(r)r.hidden=true;}
   };
 
-  // ─── Parse centro de costos text ───
+  // ─── Convertir valor monetario colombiano a número ───
+  function parseMoney(str){
+    if(!str)return 0;
+    let s=str.replace(/\$/g,'').trim();
+    // Formato colombiano: 1.234.567.890,12 → dots=thousands, comma=decimal
+    if(s.includes(',')){
+      s=s.replace(/\./g,'').replace(',','.');
+    }else{
+      // Solo dots: si hay más de 1 dot, son separadores de miles
+      const dots=(s.match(/\./g)||[]).length;
+      if(dots>1) s=s.replace(/\./g,'');
+      else if(dots===1){
+        // Un solo dot: si la parte después del punto es 3 dígitos, es separador de miles
+        const parts=s.split('.');
+        if(parts[1]&&parts[1].length===3) s=s.replace('.','');
+      }
+    }
+    const n=parseFloat(s);
+    return isNaN(n)?0:n;
+  }
+
+  // ─── Extraer todos los valores monetarios de una línea ───
+  function extractMoneyValues(line){
+    const values=[];
+    // Patrón amplio: captura números con formato colombiano
+    const re=/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)/g;
+    let m;
+    while((m=re.exec(line))!==null){
+      const v=parseMoney(m[1]);
+      if(v>0) values.push({value:v,raw:m[1],pos:m.index});
+    }
+    return values;
+  }
+
+  // ─── Parse centro de costos text — múltiples estrategias ───
   function parseCentroCostos(text){
     const lines=text.split('\n');
     const rows=[];
-    // Colombian money pattern: digits with dots as thousands, optional comma+decimals
-    // e.g. 1.234.567.890 or 1.234.567,89 or 1234567890
-    const moneyRe=/(?:^|[\s,])(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)(?:[\s,]|$)/g;
-    // Rubro code pattern: A-XX or C-XX style, or just sequences like A 01 02 03
-    const rubroRe=/\b([AC])\s*[-–]?\s*(\d{1,2})\s*[-–]?\s*(\d{1,2})\s*[-–]?\s*(\d{1,2})(?:\s*[-–]?\s*(\d{1,3}))?(?:\s*[-–]?\s*(\d{1,3}))?\b/i;
-    // Also try to match just numeric rubro fragments
-    const numRubroRe=/^(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})(?:\s+(\d{1,3}))?/;
+    let currentUnit='',diag={totalLines:lines.length,linesWithMoney:0,linesWithRubro:0,strategies:[]};
 
-    let currentUnit='';
-    // Detect unit name
+    // Detectar nombre de unidad
     lines.forEach(line=>{
-      const uMatch=line.match(/UNIDAD\s+EJECUTORA[:\s]+(.+)/i);
-      if(uMatch)currentUnit=uMatch[1].trim();
+      let m=line.match(/UNIDAD\s+EJECUTORA[:\s]*(.+)/i);
+      if(m) currentUnit=m[1].trim();
+      if(!currentUnit){m=line.match(/(?:UE|UNIDAD)\s*[:\s]*(\d{3,4}\s*[-–]\s*.+)/i);if(m) currentUnit=m[1].trim();}
     });
+
+    // ESTRATEGIA 1: Buscar patrones tipo SIIF con rubro jerárquico
+    // Formatos: "A 01 02 03 001" o "A-01-02-03-001" o "A  01  02  03  001"
+    const rubroPatterns=[
+      /\b([AC])\s*[-–.\t]?\s*(\d{1,2})\s*[-–.\t]?\s*(\d{1,2})\s*[-–.\t]?\s*(\d{1,2})(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?/i,
+      // También con columnas separadas por tabs
+      /^([AC])\t(\d{1,2})\t(\d{1,2})\t(\d{1,2})(?:\t(\d{1,3}))?/i
+    ];
 
     lines.forEach((line,idx)=>{
       const trimmed=line.trim();
       if(!trimmed||trimmed.startsWith('---'))return;
-      // Skip header-like lines
-      if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|CODIGO|CÓDIGO|RUBRO|CENTRO|Total|TOTAL)\s*$/i.test(trimmed))return;
+      if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|CODIGO|CÓDIGO|RUBRO|---)/i.test(trimmed))return;
 
-      // Try to match a rubro code
-      let rubroMatch=trimmed.match(rubroRe);
-      let codigo='',concepto='';
+      const moneyVals=extractMoneyValues(trimmed);
+      if(moneyVals.length>0) diag.linesWithMoney++;
 
-      if(rubroMatch){
-        const parts=[rubroMatch[1].toUpperCase(),rubroMatch[2],rubroMatch[3],rubroMatch[4]];
-        if(rubroMatch[5])parts.push(rubroMatch[5]);
-        if(rubroMatch[6])parts.push(rubroMatch[6]);
-        codigo=parts.join('-');
-        // Extract concept text (everything after the rubro code up to the first number)
-        const afterRubro=trimmed.slice(trimmed.indexOf(rubroMatch[0])+rubroMatch[0].length);
-        const conceptMatch=afterRubro.match(/^\s*([A-ZÁÉÍÓÚÑa-záéíóúñ\s.,()/-]+)/);
-        if(conceptMatch)concepto=conceptMatch[1].trim();
-      }
+      for(const pat of rubroPatterns){
+        const rm=trimmed.match(pat);
+        if(rm){
+          diag.linesWithRubro++;
+          const parts=[rm[1].toUpperCase()];
+          for(let k=2;k<=8;k++){if(rm[k])parts.push(rm[k]);else break;}
+          const codigo=parts.join('-');
+          // Extraer concepto: texto entre el rubro y los números
+          const afterRubro=trimmed.slice(trimmed.indexOf(rm[0])+rm[0].length);
+          const cMatch=afterRubro.match(/^\s*([A-ZÁÉÍÓÚÑa-záéíóúñ\s.,()\/\-&]+)/);
+          const concepto=cMatch?cMatch[1].trim():'';
 
-      // Extract monetary values
-      const moneyValues=[];
-      let m;
-      const moneyCopy=trimmed;
-      const globalMoneyRe=/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)/g;
-      while((m=globalMoneyRe.exec(moneyCopy))!==null){
-        let val=m[1];
-        // Convert Colombian format to number
-        if(val.includes(',')){
-          val=val.replace(/\./g,'').replace(',','.');
-        }else if((val.match(/\./g)||[]).length>1){
-          val=val.replace(/\./g,'');
-        }else if(val.includes('.')&&val.length>4){
-          // Single dot, but could be thousands separator
-          const parts=val.split('.');
-          if(parts[1]&&parts[1].length===3)val=val.replace('.','');
+          if(moneyVals.length>0){
+            // Tomar el último valor monetario de la línea (generalmente es el total)
+            const amount=moneyVals[moneyVals.length-1].value;
+            rows.push({codigo,concepto,amount,line:trimmed,lineNum:idx+1,strategy:1});
+          }
+          break;
         }
-        const num=parseFloat(val);
-        if(!isNaN(num)&&num>0)moneyValues.push(num);
-      }
-
-      if(codigo&&moneyValues.length>0){
-        // Take the largest value as the main amount (usually the total)
-        const amount=Math.max(...moneyValues);
-        rows.push({codigo,concepto,amount,line:trimmed,lineNum:idx+1});
       }
     });
 
-    // Consolidate rows with same código
+    if(rows.length>0) diag.strategies.push('rubro-jerárquico: '+rows.length+' filas');
+
+    // ESTRATEGIA 2: Si no hay rubros, buscar líneas con concepto conocido + valor
+    if(rows.length===0){
+      // Buscar patrones como "GASTOS DE PERSONAL  1.234.567.890"
+      // o "Servicios Personales  1.234.567.890"
+      const conceptoKeywords=[
+        'GASTOS DE PERSONAL','SERVICIOS PERSONALES','SUELDOS','HORAS EXTRAS',
+        'PRIMA','VACACIONES','CESANT','BONIFICACI','CONTRIBUCION','APORTES',
+        'SALUD','PENSION','ARL','RIESGOS LABORALES','PARAFISCAL','SENA','ICBF',
+        'CAJA DE COMPENSACI','INDEMNIZACI','REMUNERACION','SUELDO BASICO',
+        'PRIMA DE SERVICIO','PRIMA DE NAVIDAD','PRIMA DE VACACIONES',
+        'GASTOS DE FUNCIONAMIENTO','TRANSFERENCIAS','NOMINA','NÓMINA'
+      ];
+      lines.forEach((line,idx)=>{
+        const trimmed=line.trim();
+        if(!trimmed||trimmed.startsWith('---'))return;
+        const upper=trimmed.toUpperCase();
+        const moneyVals=extractMoneyValues(trimmed);
+        if(moneyVals.length===0)return;
+
+        for(const kw of conceptoKeywords){
+          if(upper.includes(kw)){
+            // Extraer concepto (la parte de texto)
+            const textPart=trimmed.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
+            const amount=moneyVals[moneyVals.length-1].value;
+            rows.push({codigo:'CC-'+String(rows.length+1).padStart(3,'0'),concepto:textPart,amount,line:trimmed,lineNum:idx+1,strategy:2,keyword:kw});
+            break;
+          }
+        }
+      });
+      if(rows.length>0) diag.strategies.push('concepto-keyword: '+rows.length+' filas');
+    }
+
+    // ESTRATEGIA 3: Si aún no hay nada, buscar CUALQUIER línea con código numérico + valor
+    // Patrones como "01 02 03 001  CONCEPTO  1.234.567"
+    if(rows.length===0){
+      const numCodeRe=/^(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})(?:\s+(\d{1,3}))?(?:\s+(\d{1,3}))?\s+(.*)/;
+      lines.forEach((line,idx)=>{
+        const trimmed=line.trim();
+        if(!trimmed||trimmed.startsWith('---'))return;
+        const nm=trimmed.match(numCodeRe);
+        if(nm){
+          const moneyVals=extractMoneyValues(trimmed);
+          if(moneyVals.length>0){
+            const parts=[nm[1],nm[2],nm[3]];
+            if(nm[4])parts.push(nm[4]);if(nm[5])parts.push(nm[5]);
+            const codigo=parts.join('-');
+            const rest=nm[6]||'';
+            const textPart=rest.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
+            rows.push({codigo,concepto:textPart,amount:moneyVals[moneyVals.length-1].value,line:trimmed,lineNum:idx+1,strategy:3});
+          }
+        }
+      });
+      if(rows.length>0) diag.strategies.push('código-numérico: '+rows.length+' filas');
+    }
+
+    // ESTRATEGIA 4: Capturar TODAS las líneas con valores monetarios significativos (>100.000)
+    if(rows.length===0){
+      lines.forEach((line,idx)=>{
+        const trimmed=line.trim();
+        if(!trimmed||trimmed.startsWith('---'))return;
+        if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|TOTAL|Pag\.|Pág\.|Reporte|Fecha)/i.test(trimmed))return;
+        const moneyVals=extractMoneyValues(trimmed);
+        const bigVals=moneyVals.filter(v=>v.value>=100000);
+        if(bigVals.length>0){
+          const textPart=trimmed.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
+          if(textPart.length>3){
+            rows.push({codigo:'LN-'+String(idx+1).padStart(4,'0'),concepto:textPart.slice(0,80),amount:bigVals[bigVals.length-1].value,line:trimmed,lineNum:idx+1,strategy:4});
+          }
+        }
+      });
+      if(rows.length>0) diag.strategies.push('money-lines: '+rows.length+' filas');
+    }
+
+    // Consolidar duplicados
     const map=new Map();
     rows.forEach(r=>{
-      if(map.has(r.codigo)){
-        const existing=map.get(r.codigo);
-        existing.amount+=r.amount;
-        if(!existing.concepto&&r.concepto)existing.concepto=r.concepto;
+      const key=r.codigo;
+      if(map.has(key)){
+        const e=map.get(key);
+        e.amount+=r.amount;
+        if(!e.concepto&&r.concepto)e.concepto=r.concepto;
       }else{
-        map.set(r.codigo,{...r});
+        map.set(key,{...r});
       }
     });
 
-    return{unit:currentUnit,rows:[...map.values()]};
+    return{unit:currentUnit,rows:[...map.values()],diag};
   }
 
   // ─── Process and compare ───
@@ -1885,11 +1998,13 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     // Combine all PDF texts
     let allText='';
     let allParsed=[];
+    let allDiag=[];
     nominaPdfs.forEach(pdf=>{
       const parsed=parseCentroCostos(pdf.text);
       pdf.parsed=parsed;
-      allText+=pdf.text+'\n\n';
+      allText+='══ '+pdf.name+' ══\n'+pdf.text+'\n\n';
       allParsed=allParsed.concat(parsed.rows);
+      allDiag.push({name:pdf.name,...parsed.diag});
     });
 
     // Consolidate parsed rows
@@ -1908,7 +2023,6 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
 
     // Get SIIF rows (all loaded units consolidated)
     const siifRows=loaded.flatMap(u=>u.rows);
-    // Build SIIF map by código
     const siifMap=new Map();
     siifRows.forEach(r=>{
       if(siifMap.has(r.codigo)){
@@ -1923,68 +2037,64 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     const compRows=[];
     const matchedCodes=new Set();
 
-    // Match CC rows against SIIF
     ccRows.forEach(cc=>{
-      const siif=siifMap.get(cc.codigo);
+      // MATCH 1: código exacto
+      let siif=siifMap.get(cc.codigo);
       if(siif){
         matchedCodes.add(cc.codigo);
-        compRows.push({
-          codigo:cc.codigo,
-          concepto:siif.concepto||cc.concepto,
-          aprop:siif.aprop,
-          nomina:cc.amount,
-          diff:siif.aprop-cc.amount,
-          pctEjec:siif.aprop>0?(cc.amount/siif.aprop*100):0,
-          level:siif.level,
-          matched:true
-        });
-      }else{
-        // Try partial matching (first 4-5 segments)
-        let bestMatch=null;
-        const ccParts=cc.codigo.split('-');
-        for(const[key,val]of siifMap){
-          const sParts=key.split('-');
-          const minLen=Math.min(ccParts.length,sParts.length,4);
-          let match=true;
-          for(let i=0;i<minLen;i++){
-            if(ccParts[i]!==sParts[i]){match=false;break;}
-          }
-          if(match&&minLen>=3&&(!bestMatch||sParts.length>bestMatch.parts)){
-            bestMatch={codigo:key,data:val,parts:sParts.length};
-          }
+        compRows.push({codigo:cc.codigo,concepto:siif.concepto||cc.concepto,aprop:siif.aprop,nomina:cc.amount,diff:siif.aprop-cc.amount,pctEjec:siif.aprop>0?(cc.amount/siif.aprop*100):0,level:siif.level,matched:true});
+        return;
+      }
+
+      // MATCH 2: parcial por código (primeros 3-4 segmentos)
+      let bestMatch=null;
+      const ccParts=cc.codigo.split('-');
+      for(const[key,val]of siifMap){
+        const sParts=key.split('-');
+        const minLen=Math.min(ccParts.length,sParts.length,4);
+        let match=true;
+        for(let i=0;i<minLen;i++){
+          if(ccParts[i].replace(/^0+/,'')!==sParts[i].replace(/^0+/,'')){match=false;break;}
         }
-        if(bestMatch&&!matchedCodes.has(bestMatch.codigo)){
-          matchedCodes.add(bestMatch.codigo);
-          compRows.push({
-            codigo:cc.codigo,
-            concepto:bestMatch.data.concepto||cc.concepto,
-            aprop:bestMatch.data.aprop,
-            nomina:cc.amount,
-            diff:bestMatch.data.aprop-cc.amount,
-            pctEjec:bestMatch.data.aprop>0?(cc.amount/bestMatch.data.aprop*100):0,
-            level:bestMatch.data.level,
-            matched:true,
-            partialMatch:bestMatch.codigo
-          });
-        }else{
-          compRows.push({
-            codigo:cc.codigo,
-            concepto:cc.concepto||'(Solo en Centro de Costos)',
-            aprop:0,
-            nomina:cc.amount,
-            diff:-cc.amount,
-            pctEjec:0,
-            level:4,
-            matched:false
-          });
+        if(match&&minLen>=3&&(!bestMatch||sParts.length>bestMatch.parts)){
+          bestMatch={codigo:key,data:val,parts:sParts.length};
         }
       }
+      if(bestMatch&&!matchedCodes.has(bestMatch.codigo)){
+        matchedCodes.add(bestMatch.codigo);
+        compRows.push({codigo:cc.codigo,concepto:bestMatch.data.concepto||cc.concepto,aprop:bestMatch.data.aprop,nomina:cc.amount,diff:bestMatch.data.aprop-cc.amount,pctEjec:bestMatch.data.aprop>0?(cc.amount/bestMatch.data.aprop*100):0,level:bestMatch.data.level,matched:true,partialMatch:bestMatch.codigo});
+        return;
+      }
+
+      // MATCH 3: por concepto (texto similar en SIIF)
+      if(cc.concepto&&cc.concepto.length>5){
+        const ccUp=cc.concepto.toUpperCase();
+        let bestConceptMatch=null,bestScore=0;
+        for(const[key,val]of siifMap){
+          if(matchedCodes.has(key))continue;
+          const sUp=(val.concepto||'').toUpperCase();
+          if(!sUp)continue;
+          // Palabras en común
+          const ccWords=ccUp.split(/\s+/).filter(w=>w.length>3);
+          const sWords=sUp.split(/\s+/).filter(w=>w.length>3);
+          const common=ccWords.filter(w=>sWords.some(sw=>sw.includes(w)||w.includes(sw)));
+          const score=common.length/Math.max(ccWords.length,1);
+          if(score>0.5&&score>bestScore){bestScore=score;bestConceptMatch={codigo:key,data:val};}
+        }
+        if(bestConceptMatch){
+          matchedCodes.add(bestConceptMatch.codigo);
+          compRows.push({codigo:cc.codigo,concepto:bestConceptMatch.data.concepto,aprop:bestConceptMatch.data.aprop,nomina:cc.amount,diff:bestConceptMatch.data.aprop-cc.amount,pctEjec:bestConceptMatch.data.aprop>0?(cc.amount/bestConceptMatch.data.aprop*100):0,level:bestConceptMatch.data.level||4,matched:true,partialMatch:'≈'+bestConceptMatch.codigo,conceptMatch:true});
+          return;
+        }
+      }
+
+      // Sin match
+      compRows.push({codigo:cc.codigo,concepto:cc.concepto||'(Solo en Centro de Costos)',aprop:0,nomina:cc.amount,diff:-cc.amount,pctEjec:0,level:4,matched:false});
     });
 
-    // Sort by código
     compRows.sort((a,b)=>a.codigo.localeCompare(b.codigo));
 
-    // Calculate totals
+    // Totals
     const totAprop=compRows.reduce((s,r)=>s+r.aprop,0);
     const totNomina=compRows.reduce((s,r)=>s+r.nomina,0);
     const totDiff=totAprop-totNomina;
@@ -1992,22 +2102,26 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
 
     // Render KPIs
     document.getElementById('nkAprop').textContent=fmtM(totAprop);
-    document.getElementById('nkApropSub').textContent=compRows.filter(r=>r.matched).length+' rubros encontrados';
+    document.getElementById('nkApropSub').textContent=compRows.filter(r=>r.matched).length+' rubros emparejados';
     document.getElementById('nkCc').textContent=fmtM(totNomina);
     document.getElementById('nkCcSub').textContent=ccRows.length+' rubros en PDF';
     document.getElementById('nkDiff').textContent=fmtM(totDiff);
     document.getElementById('nkDiffSub').textContent=totDiff>=0?'Saldo a favor':'Déficit';
     const nkDiffCard=document.getElementById('nkDiffCard');
-    nkDiffCard.className='kpi-card '+(totDiff>=0?'verde':'rojo');
+    if(nkDiffCard)nkDiffCard.className='kpi-card '+(totDiff>=0?'verde':'rojo');
     document.getElementById('nkPct').textContent=totPct.toFixed(1)+'%';
     document.getElementById('nkPctSub').textContent='Nómina / Apropiación';
     const nkPctCard=document.getElementById('nkPctCard');
-    nkPctCard.className='kpi-card '+semCls(totPct);
+    if(nkPctCard)nkPctCard.className='kpi-card '+semCls(totPct);
 
     // Render table
     const tbody=document.getElementById('tbodyNomina');
     const tfoot=document.getElementById('tfootNomina');
     tbody.innerHTML='';tfoot.innerHTML='';
+
+    if(compRows.length===0){
+      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No se encontraron datos comparables. Revisa el texto extraído abajo.</td></tr>';
+    }
 
     compRows.forEach(r=>{
       const p=r.pctEjec;const sc=r.matched?semCls(p):'azul';
@@ -2025,44 +2139,56 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
       tbody.appendChild(tr);
     });
 
-    // Footer totals
-    const tpT=totAprop>0?(totNomina/totAprop*100):0;const stc=semCls(tpT);
-    tfoot.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
-      <td colspan="2">TOTAL</td>
-      <td class="num">${fmtF(totAprop)}</td>
-      <td class="num">${fmtF(totNomina)}</td>
-      <td class="num ${totDiff>=0?'diff-pos':'diff-neg'}">${totDiff>=0?'+':''}${fmtF(totDiff)}</td>
-      <td class="num">${tpT.toFixed(1)}%</td>
-      <td><span class="sem sem-${stc}"><span class="sem-dot"></span>${semLbl(tpT)}</span></td>
-    </tr>`;
+    if(compRows.length>0){
+      const tpT=totAprop>0?(totNomina/totAprop*100):0;const stc=semCls(tpT);
+      tfoot.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
+        <td colspan="2">TOTAL</td>
+        <td class="num">${fmtF(totAprop)}</td>
+        <td class="num">${fmtF(totNomina)}</td>
+        <td class="num ${totDiff>=0?'diff-pos':'diff-neg'}">${totDiff>=0?'+':''}${fmtF(totDiff)}</td>
+        <td class="num">${tpT.toFixed(1)}%</td>
+        <td><span class="sem sem-${stc}"><span class="sem-dot"></span>${semLbl(tpT)}</span></td>
+      </tr>`;
+    }
 
     // Render alerts
     const alerts=[];
-    const unmatched=compRows.filter(r=>!r.matched);
-    if(unmatched.length)alerts.push({level:'media',icon:'⚠',msg:`${unmatched.length} rubro(s) del centro de costos no encontrados en la apropiación SIIF: ${unmatched.slice(0,3).map(r=>r.codigo).join(', ')}${unmatched.length>3?' y otros':''}.`});
+    if(ccRows.length===0){
+      alerts.push({level:'critica',icon:'⚠',msg:'No se pudieron extraer rubros ni valores del PDF. Revisa el texto extraído abajo para verificar el formato.'});
+    }else{
+      const unmatched=compRows.filter(r=>!r.matched);
+      if(unmatched.length)alerts.push({level:'media',icon:'⚠',msg:`${unmatched.length} rubro(s) del PDF sin correspondencia en SIIF: ${unmatched.slice(0,3).map(r=>r.codigo).join(', ')}${unmatched.length>3?' y otros':''}.`});
+      const overExec=compRows.filter(r=>r.matched&&r.pctEjec>100);
+      if(overExec.length)alerts.push({level:'critica',icon:'🚨',msg:`${overExec.length} rubro(s) con nómina > apropiación: ${overExec.slice(0,3).map(r=>r.codigo+' ('+r.pctEjec.toFixed(0)+'%)').join(', ')}.`});
+      const lowExec=compRows.filter(r=>r.matched&&r.pctEjec<50&&r.aprop>1e6);
+      if(lowExec.length)alerts.push({level:'media',icon:'📋',msg:`${lowExec.length} rubro(s) con ejecución de nómina <50%.`});
+      if(totDiff<0)alerts.push({level:'critica',icon:'💰',msg:`Déficit: nómina supera apropiación en ${fmtM(Math.abs(totDiff))}.`});
+      const conceptMatches=compRows.filter(r=>r.conceptMatch);
+      if(conceptMatches.length)alerts.push({level:'info',icon:'🔗',msg:`${conceptMatches.length} emparejado(s) por nombre de concepto. Verificar.`});
+      if(!alerts.length)alerts.push({level:'info',icon:'✅',msg:'Comparativo dentro de parámetros normales.'});
+    }
 
-    const overExec=compRows.filter(r=>r.matched&&r.pctEjec>100);
-    if(overExec.length)alerts.push({level:'critica',icon:'🚨',msg:`${overExec.length} rubro(s) con nómina superior a apropiación: ${overExec.slice(0,3).map(r=>r.codigo+' ('+r.pctEjec.toFixed(0)+'%)').join(', ')}.`});
-
-    const lowExec=compRows.filter(r=>r.matched&&r.pctEjec<50&&r.aprop>1e6);
-    if(lowExec.length)alerts.push({level:'media',icon:'📋',msg:`${lowExec.length} rubro(s) con ejecución de nómina <50% de la apropiación.`});
-
-    if(totDiff<0)alerts.push({level:'critica',icon:'💰',msg:`Déficit global: la nómina supera la apropiación en ${fmtM(Math.abs(totDiff))}.`});
-    else if(totDiff>0&&totPct<70)alerts.push({level:'media',icon:'⚡',msg:`Saldo no ejecutado de ${fmtM(totDiff)} (${(100-totPct).toFixed(1)}% sin cubrir en nómina).`});
-
-    if(compRows.filter(r=>r.partialMatch).length)alerts.push({level:'info',icon:'🔗',msg:`${compRows.filter(r=>r.partialMatch).length} rubro(s) emparejados por coincidencia parcial de código (≈). Verificar manualmente.`});
-
-    if(!alerts.length)alerts.push({level:'info',icon:'✅',msg:'Comparativo dentro de parámetros normales. Sin alertas.'});
+    // Diagnóstico
+    let diagText='── DIAGNÓSTICO ──\n';
+    allDiag.forEach(d=>{
+      diagText+=`📄 ${d.name}: ${d.totalLines} líneas, ${d.linesWithMoney} con valores monetarios, ${d.linesWithRubro} con código rubro\n`;
+      if(d.strategies.length) diagText+='   Estrategias: '+d.strategies.join(', ')+'\n';
+      else diagText+='   ⚠ Ninguna estrategia encontró datos\n';
+    });
+    diagText+=`\nSIIF cargado: ${siifRows.length} rubros, ${loaded.length} UE(s)\n`;
+    diagText+=`Rubros SIIF ejemplo: ${[...siifMap.keys()].slice(0,5).join(', ')}\n`;
+    diagText+='\n── TEXTO EXTRAÍDO ──\n';
 
     const alertEl=document.getElementById('nominaAlerts');alertEl.innerHTML='';
     alerts.forEach(a=>{
       alertEl.insertAdjacentHTML('beforeend',`<div class="alert-item ${a.level}"><span class="alert-icon">${a.icon}</span><span>${a.msg}</span></div>`);
     });
 
-    // Show raw text
-    document.getElementById('nominaRawText').textContent=allText.slice(0,10000)+(allText.length>10000?'\n\n... (texto truncado)':'');
+    // Mostrar raw text SIEMPRE expandido cuando no hay datos
+    const rawEl=document.getElementById('nominaRawText');
+    rawEl.textContent=diagText+allText.slice(0,15000)+(allText.length>15000?'\n\n... (texto truncado)':'');
+    if(ccRows.length===0) rawEl.classList.add('show');
 
-    // Show results
     document.getElementById('nominaResults').hidden=false;
   };
 
