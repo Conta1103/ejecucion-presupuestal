@@ -865,8 +865,57 @@ window.__generarPDF=function(){
       doc.text(k.val,x+5,y+13);
     });
 
+    // ── Resumen ejecutivo ──
+    let ty=58;
+    doc.setFillColor(27,79,114);doc.roundedRect(14,ty,W-28,38,2,2,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(9);doc.setTextColor(255);
+    doc.text('RESUMEN EJECUTIVO — ÍNDICE DE SALUD PRESUPUESTAL',20,ty+7);
+
+    // Gauge score circle
+    const gx=30,gy=ty+24;
+    doc.setFillColor(255,255,255);doc.circle(gx,gy,8,'F');
+    const sc=score>=80?[39,174,96]:score>=50?[243,156,18]:[231,76,60];
+    doc.setTextColor(...sc);doc.setFont('helvetica','bold');doc.setFontSize(16);
+    doc.text(score.toString(),gx,gy+2,{align:'center'});
+    doc.setFontSize(5);doc.setTextColor(255);
+    doc.text('/100',gx,gy+7,{align:'center'});
+
+    // Score label
+    const scoreLbl=score>=80?'BUENO':score>=50?'ACEPTABLE':'BAJO';
+    doc.setFillColor(...sc);doc.roundedRect(gx+12,gy-4,18,8,1.5,1.5,'F');
+    doc.setFont('helvetica','bold');doc.setFontSize(6);doc.setTextColor(255);
+    doc.text(scoreLbl,gx+21,gy+1,{align:'center'});
+
+    // Analysis text
+    const pApDisp=pct(t.aprop-t.compromiso,t.aprop);
+    const pOrdPag=t.obligacion>0?pct(t.pagos,t.obligacion):0;
+    const resLines=[];
+    resLines.push(`Apropiación vigente: ${fmtF(t.aprop)}. De este monto, el ${pC.toFixed(1)}% se encuentra comprometido (${fmtF(t.compromiso)}), el ${pO.toFixed(1)}% obligado (${fmtF(t.obligacion)}) y el ${pP.toFixed(1)}% pagado (${fmtF(t.pagos)}).`);
+    if(pApDisp>20)resLines.push(`▸ El ${pApDisp.toFixed(1)}% de la apropiación (${fmtF(t.aprop-t.compromiso)}) permanece disponible sin comprometer.`);
+    if(pO<pC-10)resLines.push(`▸ Brecha significativa entre compromiso (${pC.toFixed(1)}%) y obligación (${pO.toFixed(1)}%): posible rezago en Central de Cuentas.`);
+    if(pOrdPag<90&&t.obligacion>0)resLines.push(`▸ De lo obligado, solo el ${pOrdPag.toFixed(1)}% se ha pagado. Revisar órdenes de pago y PAC.`);
+    if(score>=80)resLines.push('Diagnóstico: La ejecución presupuestal es saludable. La cadena del gasto fluye con normalidad.');
+    else if(score>=50)resLines.push('Diagnóstico: La ejecución es aceptable pero requiere seguimiento continuo para cerrar brechas identificadas.');
+    else resLines.push('Diagnóstico: La ejecución es deficiente. Se requiere plan de acción inmediato para acelerar compromisos, obligaciones y pagos.');
+    const ponderacion=`Ponderación del índice: Compromiso×0.20 (${(pC*0.2).toFixed(1)}) + Obligación×0.45 (${(pO*0.45).toFixed(1)}) + Pagos×0.35 (${(pP*0.35).toFixed(1)}) = ${score}`;
+    resLines.push(ponderacion);
+
+    doc.setFont('helvetica','normal');doc.setFontSize(6);doc.setTextColor(220,230,240);
+    let rty=ty+13;
+    const resX=gx+34;
+    resLines.forEach(line=>{
+      const wrapped=doc.splitTextToSize(line,W-28-resX+8);
+      wrapped.forEach(wl=>{
+        if(wl.startsWith('▸')){doc.setTextColor(255,210,80);doc.text(wl,resX,rty);doc.setTextColor(220,230,240);}
+        else if(wl.startsWith('Diagnóstico')||wl.startsWith('Ponderación')){doc.setFont('helvetica','bold');doc.setTextColor(255);doc.text(wl,resX,rty);doc.setFont('helvetica','normal');doc.setTextColor(220,230,240);}
+        else doc.text(wl,resX,rty);
+        rty+=3.5;
+      });
+    });
+
+    ty=ty+42;
+
     // Table
-    let ty=60;
     doc.setFontSize(9);doc.setTextColor(27,79,114);doc.setFont('helvetica','bold');
     doc.text('CADENA PRESUPUESTAL',14,ty);ty+=5;
     const cols=['Código','Concepto','Apropiación','CDP','Compromiso','Obligación','Pagos','% Oblig.'];
