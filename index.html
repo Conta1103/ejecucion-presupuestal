@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ejecución Presupuestal SIIF</title>
+<title>División Presupuestal — Rama Judicial</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap">
 <style>
 :root {
@@ -677,6 +677,155 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 .empty-state h3 { font-size: 1.1rem; color: var(--fg); margin-bottom: 8px; font-family: var(--font-display); font-weight: 400; }
 .empty-state p { font-size: 0.85rem; max-width: 440px; margin: 0 auto; }
 
+/* ═══════ WELCOME LANDING ═══════ */
+.welcome-hero {
+  position: relative;
+  background: linear-gradient(135deg, var(--accent) 0%, #0E2A3F 100%);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 24px;
+  box-shadow: var(--shadow-lg);
+}
+.welcome-hero-bg {
+  position: absolute; inset: 0; pointer-events: none;
+}
+.welcome-bg-pattern { width: 100%; height: 100%; position: absolute; bottom: 0; opacity: .7; }
+.welcome-hero-content {
+  position: relative; z-index: 1;
+  padding: 48px 40px 44px;
+  text-align: center;
+}
+.welcome-logo-lg {
+  width: 72px; height: 72px;
+  margin: 0 auto 20px;
+  background: rgba(255,255,255,0.08);
+  border-radius: 18px;
+  display: flex; align-items: center; justify-content: center;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,168,76,0.25);
+}
+.welcome-title {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 400;
+  color: #fff;
+  margin-bottom: 8px;
+  letter-spacing: -0.01em;
+}
+.welcome-subtitle {
+  font-size: 0.88rem;
+  color: rgba(201,168,76,0.9);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  margin-bottom: 12px;
+}
+.welcome-desc {
+  font-size: 0.84rem;
+  color: rgba(168,196,216,0.85);
+  max-width: 520px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+.welcome-modules { margin-bottom: 24px; }
+.welcome-section-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--fg);
+  margin-bottom: 14px;
+  padding-left: 4px;
+}
+.welcome-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+}
+.welcome-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+  font-family: var(--font-body);
+}
+.welcome-card:hover {
+  border-color: var(--gold);
+  box-shadow: 0 4px 16px rgba(201,168,76,0.12);
+  transform: translateY(-2px);
+}
+.wc-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.wc-text { flex: 1; min-width: 0; }
+.wc-text strong {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--fg);
+  margin-bottom: 3px;
+}
+.wc-text span {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.wc-arrow {
+  font-size: 1.1rem;
+  color: var(--muted);
+  opacity: 0;
+  transition: opacity 0.2s, transform 0.2s;
+  flex-shrink: 0;
+}
+.welcome-card:hover .wc-arrow { opacity: 1; transform: translateX(3px); }
+
+.welcome-footer-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.wf-item {
+  flex: 1 1 200px;
+  padding: 14px 18px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.wf-item:last-child { border-right: none; }
+.wf-label {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.wf-value {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--fg);
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .welcome-hero-content { padding: 32px 20px 28px; }
+  .welcome-title { font-size: 1.5rem; }
+  .welcome-grid { grid-template-columns: 1fr; }
+  .wf-item { flex-basis: 100%; border-right: none; }
+}
+
 /* ═══════ PDF OVERLAY ═══════ */
 .pdf-overlay {
   position: fixed; inset: 0; z-index: 1000;
@@ -804,10 +953,12 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 <!-- ═══════ SIDEBAR ═══════ -->
 <aside class="sidebar">
   <div class="sidebar-brand">
-    <div class="sidebar-logo">⚖</div>
+    <div class="sidebar-logo">
+      <svg viewBox="0 0 28 28" fill="none" width="24" height="24"><path d="M14 2L3 8v12l11 6 11-6V8L14 2z" fill="#1B4F72" stroke="#C9A84C" stroke-width="1.2"/><path d="M14 5l8 4.5v9L14 23l-8-4.5v-9L14 5z" fill="none" stroke="#E8D48B" stroke-width=".8"/><path d="M10 12h8M10 14.5h8M10 17h5" stroke="#C9A84C" stroke-width="1.2" stroke-linecap="round"/></svg>
+    </div>
     <div class="sidebar-brand-text">
-      <h2>SIIF Nación</h2>
-      <p>Ejecución Presupuestal</p>
+      <h2>División Presupuestal</h2>
+      <p>Rama Judicial · DESAJ</p>
     </div>
   </div>
 
@@ -856,7 +1007,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 <!-- ═══════ MAIN CONTENT ═══════ -->
 <div class="main-wrap">
   <div class="topbar">
-    <span class="topbar-title">Ejecución Presupuestal</span>
+    <span class="topbar-title">División Presupuestal</span>
     <span class="topbar-date" id="topbarDate"></span>
     <div class="topbar-right">
       <button class="btn-pdf" id="btnPdf" disabled onclick="window.__generarPDF()">
@@ -871,13 +1022,101 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
     <!-- ═══════ SECTION: DASHBOARD ═══════ -->
     <div class="section active" id="sec-dashboard">
       <div id="emptyState">
-        <div class="card">
-          <div class="card-body">
-            <div class="empty-state">
-              <div class="empty-state-icon">📊</div>
-              <h3>Sin datos cargados</h3>
-              <p>Carga al menos un reporte de ejecución presupuestal del SIIF Nación para comenzar el análisis. Usa la sección <strong>"Cargar Archivos"</strong> en el menú lateral.</p>
+        <!-- ═══ WELCOME HERO ═══ -->
+        <div class="welcome-hero">
+          <div class="welcome-hero-bg">
+            <svg class="welcome-bg-pattern" viewBox="0 0 600 200" preserveAspectRatio="none"><defs><linearGradient id="wg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#C9A84C" stop-opacity=".12"/><stop offset="1" stop-color="#1B4F72" stop-opacity=".06"/></linearGradient></defs><path d="M0 100Q150 40 300 100T600 80V200H0Z" fill="url(#wg1)"/><path d="M0 140Q200 80 400 130T600 110V200H0Z" fill="url(#wg1)" opacity=".5"/></svg>
+          </div>
+          <div class="welcome-hero-content">
+            <div class="welcome-logo-lg">
+              <svg viewBox="0 0 48 48" fill="none" width="48" height="48"><path d="M24 4L5 14v20l19 10 19-10V14L24 4z" fill="var(--accent)" stroke="var(--gold)" stroke-width="1.5"/><path d="M24 9l14 7.5v15L24 39 10 31.5v-15L24 9z" fill="none" stroke="var(--gold)" stroke-width=".8" opacity=".5"/><path d="M16 20h16M16 24h16M16 28h10" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round"/></svg>
             </div>
+            <h1 class="welcome-title">División Presupuestal</h1>
+            <p class="welcome-subtitle">Dirección Seccional de Administración Judicial de Sincelejo</p>
+            <p class="welcome-desc">Plataforma de análisis y control de ejecución presupuestal para las Unidades Ejecutoras de la Rama Judicial.</p>
+          </div>
+        </div>
+
+        <!-- ═══ QUICK ACCESS ═══ -->
+        <div class="welcome-modules">
+          <h3 class="welcome-section-title">Módulos disponibles</h3>
+          <div class="welcome-grid">
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=archivos]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#2980B9,#1B4F72)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" stroke="#fff" stroke-width="1.5"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Cargar Archivos</strong>
+                <span>Importar reportes Excel del SIIF Nación por cada Unidad Ejecutora</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=analisis]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#27AE60,#1E8449)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M3 20h18M6 16V8m4 8V4m4 12v-5m4 5V7" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Análisis Gráfico</strong>
+                <span>Visualización de ejecución con gráficas interactivas y semáforos</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=comparativo]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#8E44AD,#6C3483)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M9 3H4a1 1 0 00-1 1v5m16-6h-5m5 0v5M15 21h5a1 1 0 001-1v-5M9 21H4a1 1 0 01-1-1v-5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Comparativo UE</strong>
+                <span>Comparar ejecución entre Unidades Ejecutoras lado a lado</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=nomina]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#C9A84C,#A67C00)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2m8-10a4 4 0 100-8 4 4 0 000 8zm10 0l-3 3m0 0l-3-3m3 3V4" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Nómina vs Presupuesto</strong>
+                <span>Verificar apropiación suficiente para nómina — Efinómina 10503</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=pdf]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#E74C3C,#C0392B)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><path d="M6 2h8l6 6v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4a2 2 0 012-2z" stroke="#fff" stroke-width="1.5"/><path d="M14 2v6h6M8 13h8M8 17h5" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Generar PDF</strong>
+                <span>Exportar informe de ejecución presupuestal en formato PDF</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+            <button class="welcome-card" onclick="navTo(document.querySelector('[data-section=auditoria]'))">
+              <div class="wc-icon" style="background:linear-gradient(135deg,#F39C12,#D68910)">
+                <svg viewBox="0 0 24 24" fill="none" width="24" height="24"><circle cx="11" cy="11" r="7" stroke="#fff" stroke-width="1.5"/><path d="M21 21l-4.35-4.35" stroke="#fff" stroke-width="1.5" stroke-linecap="round"/></svg>
+              </div>
+              <div class="wc-text">
+                <strong>Auditoría</strong>
+                <span>Alertas automáticas y revisión de anomalías presupuestales</span>
+              </div>
+              <span class="wc-arrow">→</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ═══ FOOTER INFO ═══ -->
+        <div class="welcome-footer-info">
+          <div class="wf-item">
+            <span class="wf-label">Normativa</span>
+            <span class="wf-value">Resolución 036/2019 CGN · Guía 12 — Ejecución Presupuestal</span>
+          </div>
+          <div class="wf-item">
+            <span class="wf-label">Entidad</span>
+            <span class="wf-value">Consejo Superior de la Judicatura — DESAJ Sincelejo</span>
+          </div>
+          <div class="wf-item">
+            <span class="wf-label">Vigencia</span>
+            <span class="wf-value" id="welcomeVigencia">2026</span>
           </div>
         </div>
       </div>
@@ -1271,6 +1510,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 
 // ─── Set current date in topbar ───
 document.getElementById('topbarDate').textContent=new Date().toLocaleDateString('es-CO',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+{const vig=document.getElementById('welcomeVigencia');if(vig)vig.textContent=new Date().getFullYear();}
 
 // ─── Navigation ───
 window.navTo=function(btn){
