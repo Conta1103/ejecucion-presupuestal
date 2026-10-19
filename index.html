@@ -2361,17 +2361,47 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
   };
 
   // ─── Convertir valor monetario colombiano a número ───
+  // Parsear valor monetario — soporta formato colombiano (1.234.567,89)
+  // y formato internacional (1,234,567.89) autodetectando cuál es
   function parseMoney(str){
     if(!str)return 0;
-    let s=str.replace(/\$/g,'').trim();
-    if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.');}
-    else{const dots=(s.match(/\./g)||[]).length;if(dots>1)s=s.replace(/\./g,'');else if(dots===1){const parts=s.split('.');if(parts[1]&&parts[1].length===3)s=s.replace('.','');}}
+    let s=str.replace(/\$/g,'').replace(/\s/g,'').trim();
+    if(!s)return 0;
+
+    // Detectar formato: ¿tiene comas Y puntos?
+    const hasDot=s.includes('.'), hasCom=s.includes(',');
+
+    if(hasDot&&hasCom){
+      // Ambos presentes: el último separador es el decimal
+      const lastDot=s.lastIndexOf('.'), lastCom=s.lastIndexOf(',');
+      if(lastCom>lastDot){
+        // Formato colombiano: 1.234.567,89 → puntos=miles, coma=decimal
+        s=s.replace(/\./g,'').replace(',','.');
+      }else{
+        // Formato internacional: 1,234,567.89 → comas=miles, punto=decimal
+        s=s.replace(/,/g,'');
+      }
+    }else if(hasCom&&!hasDot){
+      // Solo comas: si hay más de una → miles; si una sola y después tiene 1-2 dígitos → decimal
+      const commas=(s.match(/,/g)||[]).length;
+      if(commas>1){s=s.replace(/,/g,'');}
+      else{const parts=s.split(',');if(parts[1]&&parts[1].length<=2){s=s.replace(',','.');}else{s=s.replace(',','');}}
+    }else if(hasDot&&!hasCom){
+      // Solo puntos: si hay más de uno → miles; si uno solo y después tiene 3 dígitos → miles
+      const dots=(s.match(/\./g)||[]).length;
+      if(dots>1){s=s.replace(/\./g,'');}
+      else{const parts=s.split('.');if(parts[1]&&parts[1].length===3){s=s.replace('.','');}
+      /* else: un punto con 1-2 dígitos → decimal, dejar como está */}
+    }
+
     const n=parseFloat(s);return isNaN(n)?0:n;
   }
 
+  // Extraer valores monetarios de una línea — captura ambos formatos
   function extractMoneyValues(line){
     const values=[];
-    const re=/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)/g;
+    // Formato colombiano (1.234.567,89) + internacional (1,234,567.89) + números simples grandes
+    const re=/(\d{1,3}(?:[.,]\d{3})+(?:[.,]\d{1,2})?|\d{4,}(?:[.,]\d{1,2})?)/g;
     let m;
     while((m=re.exec(line))!==null){const v=parseMoney(m[1]);if(v>0)values.push({value:v,raw:m[1],pos:m.index});}
     return values;
