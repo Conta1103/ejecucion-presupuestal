@@ -1061,35 +1061,50 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
       </div>
     </div>
 
-    <!-- ═══════ SECTION: NÓMINA ═══════ -->
+    <!-- ═══════ SECTION: NÓMINA — Verificación Apropiación vs Efinómina ═══════ -->
     <div class="section" id="sec-nomina">
       <div class="card" style="margin-bottom:18px;">
         <div class="card-header">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 5L8 2 5 5M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Cargar PDFs — Centro de Costos (Nómina)
+          Cargar PDFs — Efinómina Reporte 10503 (Nómina Resumen CSJ)
         </div>
         <div class="card-body">
           <div class="nomina-drop" id="nominaDrop">
             <span class="drop-icon">📋</span>
-            <span class="drop-label">Arrastra PDFs de Centro de Costos aquí</span>
-            <span class="drop-hint">Acepta múltiples archivos PDF del reporte de centro de costos SIIF</span>
+            <span class="drop-label">Arrastra PDFs de Efinómina (Reporte 10503) aquí</span>
+            <span class="drop-hint">Nómina Resumen CSJ — Planta Permanente y Acuerdos Temporales (TC, TD, TU, TT)</span>
           </div>
           <input type="file" id="nominaFileInput" accept=".pdf" multiple style="display:none;">
           <div class="nomina-file-list" id="nominaFileList"></div>
           <div id="nominaUploadError" hidden style="margin-top:12px;padding:10px 14px;background:var(--sem-rojo-bg);border-radius:8px;font-size:.82rem;color:var(--sem-rojo);"></div>
+          <div style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;margin-top:14px;">
+            <div>
+              <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px;">Meses para cálculo de adiciones</label>
+              <input type="number" id="nominaMeses" value="3" min="1" max="12" style="width:70px;padding:7px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;text-align:center;">
+            </div>
+          </div>
           <button class="btn-nomina" id="btnProcesarNomina" disabled onclick="window.__procesarNomina()">
-            ⚙ Procesar y Comparar con Apropiación
+            ⚙ Verificar Apropiación vs Nómina
           </button>
           <p style="font-size:.75rem;color:var(--muted);margin-top:10px;line-height:1.6;">
-            <strong>Instrucciones:</strong> Carga los reportes PDF de centro de costos del SIIF Nación.
-            El sistema extraerá los rubros y montos de nómina para compararlos contra la apropiación vigente cargada en los archivos Excel.
-            <br><strong>Requisito:</strong> Debes tener al menos una UE cargada en "Cargar Archivos" para realizar la comparación.
+            <strong>Protocolo:</strong> 1) Carga archivos Excel del SIIF en "Cargar Archivos".
+            2) Sube aquí los PDFs del reporte 10503 de Efinómina. El sistema detecta automáticamente si es Planta Permanente o Temporal (acuerdos TC/TD/TU/TT por nombre de archivo).
+            3) Se extrae solo la sección <strong>INGRESOS</strong>, se valida contra TOTAL INGRESOS del PDF, se agrupa por rubro SIIF y se compara contra el <strong>CDP POR COMPROMETER</strong>.
+            <br><strong>Clasificación:</strong> ✅ Suficiente (margen ≥ 5%) · ⚠ Ajustado (margen < 5%) · ❌ Insuficiente (déficit).
           </p>
         </div>
       </div>
 
       <div id="nominaResults" hidden>
-        <!-- Filtro Sub Unidad Ejecutora -->
+        <!-- Cuadre de Ingresos -->
+        <div class="card" style="margin-bottom:18px;" id="nominaCuadreCard">
+          <div class="card-header">✓ Cuadre de Ingresos — Validación PDF</div>
+          <div class="card-body" id="nominaCuadreBody">
+            <p style="color:var(--muted);font-size:.82rem;">Verificando sumas...</p>
+          </div>
+        </div>
+
+        <!-- Filtros: Sub UE + Situación de Fondos -->
         <div class="card" style="margin-bottom:18px;">
           <div class="card-body" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
             <div style="flex:1;min-width:200px;">
@@ -1098,31 +1113,39 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
                 <option value="all">📋 Todas las Sub Unidades</option>
               </select>
             </div>
+            <div style="flex:1;min-width:160px;">
+              <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px;">Situación de Fondos</label>
+              <select id="nominaSitFondos" class="filter-select" onchange="window.__filtrarNomina()" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;">
+                <option value="all">Todas (CSF + SSF)</option>
+                <option value="CSF">CSF — Con Situación de Fondos</option>
+                <option value="SSF">SSF — Sin Situación de Fondos</option>
+              </select>
+            </div>
             <div style="display:flex;gap:8px;align-items:end;padding-bottom:2px;">
               <span id="nominaSubUEInfo" style="font-size:.78rem;color:var(--muted);"></span>
             </div>
           </div>
         </div>
 
-        <!-- Planta Permanente vs Temporal -->
+        <!-- Planta Permanente vs Temporal KPIs -->
         <div class="nomina-kpi-row" style="margin-bottom:18px;" id="nominaPlantaRow">
-          <div class="kpi-card" id="plantaPermanenteCard" style="border-left:4px solid #2980B9;">
+          <div class="kpi-card" style="border-left:4px solid #2980B9;">
             <div class="kpi-top"><div class="kpi-icon blue">🏛</div></div>
             <div class="kpi-label">Planta Permanente (A-01-01)</div>
             <div class="kpi-value" id="nkPermanente">$0</div>
-            <div class="kpi-sub" id="nkPermanenteSub">Apropiación</div>
+            <div class="kpi-sub" id="nkPermanenteSub">CDP por Comprometer</div>
           </div>
-          <div class="kpi-card" id="plantaTemporalCard" style="border-left:4px solid #8E44AD;">
+          <div class="kpi-card" style="border-left:4px solid #8E44AD;">
             <div class="kpi-top"><div class="kpi-icon" style="background:rgba(142,68,173,0.1);color:#8E44AD;">📋</div></div>
             <div class="kpi-label">Planta Temporal (A-01-02)</div>
             <div class="kpi-value" id="nkTemporal">$0</div>
-            <div class="kpi-sub" id="nkTemporalSub">Apropiación</div>
+            <div class="kpi-sub" id="nkTemporalSub">CDP por Comprometer</div>
           </div>
           <div class="kpi-card" style="border-left:4px solid var(--gold);">
             <div class="kpi-top"><div class="kpi-icon yellow">⚖</div></div>
-            <div class="kpi-label">Total Gastos Personal (A-01)</div>
+            <div class="kpi-label">Total Gastos Personal</div>
             <div class="kpi-value" id="nkTotalPersonal">$0</div>
-            <div class="kpi-sub" id="nkTotalPersonalSub">Apropiación total</div>
+            <div class="kpi-sub" id="nkTotalPersonalSub">CDP por Comprometer total</div>
           </div>
         </div>
 
@@ -1130,40 +1153,40 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
         <div class="nomina-kpi-row" id="nominaKpiRow">
           <div class="kpi-card azul">
             <div class="kpi-top"><div class="kpi-icon blue">💰</div></div>
-            <div class="kpi-label">Apropiación Nómina</div>
+            <div class="kpi-label">CDP por Comprometer</div>
             <div class="kpi-value" id="nkAprop">$0</div>
             <div class="kpi-sub" id="nkApropSub">Rubros de personal</div>
           </div>
           <div class="kpi-card" id="nkCcCard">
             <div class="kpi-top"><div class="kpi-icon" style="background:rgba(142,68,173,0.1);color:#8E44AD;">📋</div></div>
-            <div class="kpi-label">Centro de Costos</div>
+            <div class="kpi-label">Total Ingresos Nómina</div>
             <div class="kpi-value" id="nkCc">$0</div>
-            <div class="kpi-sub" id="nkCcSub">Total nómina PDF</div>
+            <div class="kpi-sub" id="nkCcSub">Efinómina 10503</div>
           </div>
           <div class="kpi-card" id="nkDiffCard">
             <div class="kpi-top"><div class="kpi-icon yellow">⚖</div></div>
             <div class="kpi-label">Diferencia</div>
             <div class="kpi-value" id="nkDiff">$0</div>
-            <div class="kpi-sub" id="nkDiffSub">Aprop. − Nómina</div>
+            <div class="kpi-sub" id="nkDiffSub">CDP − Nómina</div>
           </div>
           <div class="kpi-card" id="nkPctCard">
             <div class="kpi-top"><div class="kpi-icon green">📊</div></div>
-            <div class="kpi-label">% Ejecución Nómina</div>
-            <div class="kpi-value" id="nkPct">0%</div>
-            <div class="kpi-sub" id="nkPctSub">Nómina / Apropiación</div>
+            <div class="kpi-label">Rubros Suficientes</div>
+            <div class="kpi-value" id="nkPct">0/0</div>
+            <div class="kpi-sub" id="nkPctSub">Suficiente / Total</div>
           </div>
         </div>
 
         <!-- Comparison Table -->
         <div class="card" style="margin-bottom:18px;">
-          <div class="card-header">📊 Comparativo Apropiación vs Centro de Costos</div>
+          <div class="card-header">📊 Verificación CDP por Comprometer vs Nómina (Ingresos)</div>
           <div class="card-body" style="padding:0;">
             <div class="table-wrap">
               <table id="tablaNomina">
                 <thead><tr>
-                  <th>Código</th><th>Concepto</th><th class="num">Apropiación</th>
-                  <th class="num">Centro Costos</th><th class="num">Diferencia</th>
-                  <th class="num">% Ejec.</th><th>Estado</th>
+                  <th>Rubro SIIF</th><th>Concepto</th><th>Conceptos Efinómina</th>
+                  <th class="num">CDP x Comprom.</th><th class="num">Valor Nómina</th>
+                  <th class="num">Diferencia</th><th class="num">Margen</th><th>Estado</th>
                 </tr></thead>
                 <tbody id="tbodyNomina"></tbody>
                 <tfoot id="tfootNomina"></tfoot>
@@ -1172,9 +1195,27 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
           </div>
         </div>
 
-        <!-- Nomina Alerts -->
+        <!-- Adiciones Presupuestales -->
+        <div class="card" style="margin-bottom:18px;" id="nominaAdicionesCard" hidden>
+          <div class="card-header">📈 Cálculo de Adiciones Presupuestales</div>
+          <div class="card-body" style="padding:0;">
+            <div class="table-wrap">
+              <table id="tablaAdiciones">
+                <thead><tr>
+                  <th>Rubro</th><th>Concepto</th><th class="num">Costo Mensual</th>
+                  <th class="num">Necesidad N Meses</th><th class="num">CDP x Comprom.</th>
+                  <th class="num">Adición Requerida</th><th>Estado</th>
+                </tr></thead>
+                <tbody id="tbodyAdiciones"></tbody>
+                <tfoot id="tfootAdiciones"></tfoot>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Alertas -->
         <div class="card" style="margin-bottom:18px;">
-          <div class="card-header">🔍 Alertas de Nómina</div>
+          <div class="card-header">🔍 Alertas de Verificación</div>
           <div class="card-body">
             <div class="alert-list" id="nominaAlerts"></div>
           </div>
@@ -1185,7 +1226,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
           <div class="card-header">📄 Datos Extraídos del PDF</div>
           <div class="card-body">
             <button class="btn-toggle-raw" onclick="document.getElementById('nominaRawText').classList.toggle('show')">
-              ▸ Ver/Ocultar texto extraído del PDF
+              ▸ Ver/Ocultar texto extraído y diagnóstico
             </button>
             <div class="nomina-raw" id="nominaRawText"></div>
           </div>
@@ -1757,20 +1798,71 @@ function mkEl(tag,attrs){const el=document.createElementNS('http://www.w3.org/20
 function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':'var(--font-body)'});el.textContent=text;return el;}
 
 // ══════════════════════════════════════════════
-// ═══════ MÓDULO NÓMINA — CENTRO DE COSTOS ═══════
-// ══════════════════════════════════════════════
+// ═══════ MÓDULO NÓMINA — VERIFICACIÓN APROPIACIÓN vs EFINÓMINA 10503 ═══════
+// ═══════════════════════════════════════════════════════════════════════════
 (function initNomina(){
-  // PDF.js worker
   if(typeof pdfjsLib!=='undefined'){
     pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
   }
 
-  const nominaPdfs=[]; // [{name, pages, text, parsed}]
+  const nominaPdfs=[]; // [{name, pages, text, tipo:'permanente'|'temporal', sufijo:'TC'|'TD'|'TU'|'TT'|'', parsed}]
   const dropZone=document.getElementById('nominaDrop');
   const fileInput=document.getElementById('nominaFileInput');
   const fileList=document.getElementById('nominaFileList');
   const btnProc=document.getElementById('btnProcesarNomina');
   const errEl=document.getElementById('nominaUploadError');
+
+  // ─── MAPEO EFINÓMINA CONCEPTO → RUBRO SIIF ───
+  // Planta Permanente (A-01-01)
+  const MAPA_PERMANENTE={
+    'A-01-01-01-001-001':['SUEBA','RJ','PGINCREM','PRIANT'],
+    'A-01-01-01-001-004':['SUBAL'],
+    'A-01-01-01-001-005':['SUBTR1'],
+    'A-01-01-01-001-007':['BONSE','PRBSE'],
+    'A-01-01-01-001-010':['PRIVA'],
+    'A-01-01-03-001-001':['PGVAC','PGVLD'],
+    'A-01-01-03-001-003':['BONRE'],
+    'A-01-01-03-059':['PGBONJU','RJ'],
+    'A-01-01-03-081':['PGBONCO'],
+    'A-01-01-03-082':['PRIES','RJ'],
+    'A-01-01-03-083':['PRIES','RJ'],
+    'A-03-04-02-012-001':['PGDENCA','PGDENCN','PGDINCA','DIFIBCRG'],
+    'A-03-04-02-012-002':['PGMAT','PGPAT']
+  };
+  // Planta Temporal (A-01-02)
+  const MAPA_TEMPORAL={
+    'A-01-02-01-001-001':['SUEBA'],
+    'A-01-02-01-001-004':['SUBAL'],
+    'A-01-02-03-059':['PGBONJU'],
+    'A-01-02-03-083':['PRIES'],
+    'A-03-04-02-012-001':['PGDINCA']
+  };
+
+  // Build reverse maps: concepto code → [rubro]
+  function buildReverseMap(mapa){
+    const rev={};
+    for(const[rubro,codes]of Object.entries(mapa)){
+      codes.forEach(c=>{
+        if(!rev[c])rev[c]=[];
+        if(!rev[c].includes(rubro))rev[c].push(rubro);
+      });
+    }
+    return rev;
+  }
+  const REV_PERMANENTE=buildReverseMap(MAPA_PERMANENTE);
+  const REV_TEMPORAL=buildReverseMap(MAPA_TEMPORAL);
+
+  // ─── Detectar tipo de nómina por nombre de archivo ───
+  function detectarTipoNomina(fileName){
+    const upper=fileName.toUpperCase();
+    // Acuerdos temporales
+    if(/\bTC\b/.test(upper)) return {tipo:'temporal',sufijo:'TC',ue:'02'};
+    if(/\bTD\b/.test(upper)) return {tipo:'temporal',sufijo:'TD',ue:'02'};
+    if(/\bTU\b/.test(upper)) return {tipo:'temporal',sufijo:'TU',ue:'08',sit:'SSF'};
+    if(/\bTT\b/.test(upper)) return {tipo:'temporal',sufijo:'TT',ue:'08',sit:'CSF'};
+    // Default: planta permanente
+    return {tipo:'permanente',sufijo:'',ue:'',sit:''};
+  }
 
   // ─── Drag & drop + click ───
   if(dropZone){
@@ -1794,9 +1886,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
           for(let p=1;p<=pdf.numPages;p++){
             const page=await pdf.getPage(p);
             const content=await page.getTextContent();
-            // Reconstruir líneas usando posición Y, ordenando por X dentro de cada línea
             const items=content.items.map(it=>({str:it.str,x:Math.round(it.transform[4]),y:Math.round(it.transform[5]),w:it.width||0}));
-            // Agrupar por Y (tolerancia 3px)
             const lineMap=new Map();
             items.forEach(it=>{
               let foundY=null;
@@ -1804,11 +1894,9 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
               if(foundY!==null)lineMap.get(foundY).push(it);
               else lineMap.set(it.y,[it]);
             });
-            // Ordenar líneas de arriba a abajo (Y mayor = arriba en PDF)
             const sortedYs=[...lineMap.keys()].sort((a,b)=>b-a);
             sortedYs.forEach(y=>{
               const lineItems=lineMap.get(y).sort((a,b)=>a.x-b.x);
-              // Insertar separadores tab cuando hay espacio grande entre items
               let lineStr='';
               lineItems.forEach((it,idx)=>{
                 if(idx>0){
@@ -1822,7 +1910,8 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
             });
             fullText+='--- Página '+p+' ---\n';
           }
-          nominaPdfs.push({name:f.name,pages:pdf.numPages,text:fullText,parsed:null});
+          const det=detectarTipoNomina(f.name);
+          nominaPdfs.push({name:f.name,pages:pdf.numPages,text:fullText,parsed:null,...det});
           renderNominaFileList();
         }catch(ex){
           errEl.hidden=false;errEl.textContent='Error leyendo '+f.name+': '+ex.message;
@@ -1837,11 +1926,26 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     nominaPdfs.forEach((pdf,i)=>{
       const div=document.createElement('div');
       div.className='nomina-file-item';
-      div.innerHTML=`<span style="font-size:1.1rem">📄</span><span class="file-name">${pdf.name}</span><span class="file-pages">${pdf.pages} pág.</span><button class="file-remove" onclick="window.__removeNominaPdf(${i})">✕</button>`;
+      const tipoBadge=pdf.tipo==='temporal'
+        ?`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;background:rgba(142,68,173,0.15);color:#8E44AD;">TEMPORAL ${pdf.sufijo}</span>`
+        :`<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:.7rem;font-weight:700;background:rgba(41,128,185,0.15);color:#2980B9;">PERMANENTE</span>`;
+      div.innerHTML=`<span style="font-size:1.1rem">📄</span><span class="file-name">${pdf.name}</span>${tipoBadge}
+        <select style="font-size:.72rem;padding:2px 6px;border-radius:4px;border:1px solid var(--border);background:var(--bg);color:var(--text);" onchange="window.__cambiarTipoNomina(${i},this.value)">
+          <option value="permanente" ${pdf.tipo==='permanente'?'selected':''}>Permanente</option>
+          <option value="temporal" ${pdf.tipo==='temporal'?'selected':''}>Temporal</option>
+        </select>
+        <span class="file-pages">${pdf.pages} pág.</span>
+        <button class="file-remove" onclick="window.__removeNominaPdf(${i})">✕</button>`;
       fileList.appendChild(div);
     });
     if(btnProc) btnProc.disabled=nominaPdfs.length===0;
   }
+
+  window.__cambiarTipoNomina=function(idx,tipo){
+    nominaPdfs[idx].tipo=tipo;
+    if(tipo==='permanente') nominaPdfs[idx].sufijo='';
+    renderNominaFileList();
+  };
 
   window.__removeNominaPdf=function(idx){
     nominaPdfs.splice(idx,1);
@@ -1853,220 +1957,201 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
   function parseMoney(str){
     if(!str)return 0;
     let s=str.replace(/\$/g,'').trim();
-    // Formato colombiano: 1.234.567.890,12 → dots=thousands, comma=decimal
-    if(s.includes(',')){
-      s=s.replace(/\./g,'').replace(',','.');
-    }else{
-      // Solo dots: si hay más de 1 dot, son separadores de miles
-      const dots=(s.match(/\./g)||[]).length;
-      if(dots>1) s=s.replace(/\./g,'');
-      else if(dots===1){
-        // Un solo dot: si la parte después del punto es 3 dígitos, es separador de miles
-        const parts=s.split('.');
-        if(parts[1]&&parts[1].length===3) s=s.replace('.','');
-      }
-    }
-    const n=parseFloat(s);
-    return isNaN(n)?0:n;
+    if(s.includes(',')){s=s.replace(/\./g,'').replace(',','.');}
+    else{const dots=(s.match(/\./g)||[]).length;if(dots>1)s=s.replace(/\./g,'');else if(dots===1){const parts=s.split('.');if(parts[1]&&parts[1].length===3)s=s.replace('.','');}}
+    const n=parseFloat(s);return isNaN(n)?0:n;
   }
 
-  // ─── Extraer todos los valores monetarios de una línea ───
   function extractMoneyValues(line){
     const values=[];
-    // Patrón amplio: captura números con formato colombiano
     const re=/(\d{1,3}(?:\.\d{3})+(?:,\d{1,2})?|\d{4,}(?:,\d{1,2})?)/g;
     let m;
-    while((m=re.exec(line))!==null){
-      const v=parseMoney(m[1]);
-      if(v>0) values.push({value:v,raw:m[1],pos:m.index});
-    }
+    while((m=re.exec(line))!==null){const v=parseMoney(m[1]);if(v>0)values.push({value:v,raw:m[1],pos:m.index});}
     return values;
   }
 
-  // ─── Parse centro de costos text — múltiples estrategias ───
-  function parseCentroCostos(text){
+  // ─── Parse Efinómina 10503: extraer solo sección INGRESOS ───
+  function parseEfinomina10503(text){
     const lines=text.split('\n');
-    const rows=[];
-    let currentUnit='',diag={totalLines:lines.length,linesWithMoney:0,linesWithRubro:0,strategies:[]};
+    const conceptos=[]; // [{codigo, descripcion, servidores, valor}]
+    let enIngresos=false, totalIngresosPdf=0, sumaConceptos=0;
+    let diag={totalLines:lines.length,ingresosFound:false,conceptosCount:0,totalIngresosPdf:0,sumaConceptos:0,cuadre:false};
 
-    // Detectar nombre de unidad
-    lines.forEach(line=>{
-      let m=line.match(/UNIDAD\s+EJECUTORA[:\s]*(.+)/i);
-      if(m) currentUnit=m[1].trim();
-      if(!currentUnit){m=line.match(/(?:UE|UNIDAD)\s*[:\s]*(\d{3,4}\s*[-–]\s*.+)/i);if(m) currentUnit=m[1].trim();}
-    });
+    for(let i=0;i<lines.length;i++){
+      const line=lines[i].trim();
+      if(!line||line.startsWith('---'))continue;
 
-    // ESTRATEGIA 1: Buscar patrones tipo SIIF con rubro jerárquico
-    // Formatos: "A 01 02 03 001" o "A-01-02-03-001" o "A  01  02  03  001"
-    const rubroPatterns=[
-      /\b([AC])\s*[-–.\t]?\s*(\d{1,2})\s*[-–.\t]?\s*(\d{1,2})\s*[-–.\t]?\s*(\d{1,2})(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?(?:\s*[-–.\t]?\s*(\d{1,3}))?/i,
-      // También con columnas separadas por tabs
-      /^([AC])\t(\d{1,2})\t(\d{1,2})\t(\d{1,2})(?:\t(\d{1,3}))?/i
-    ];
+      // Detectar inicio de sección INGRESOS
+      if(/^\s*INGRESOS\s*$/i.test(line)||/^\s*I\s*N\s*G\s*R\s*E\s*S\s*O\s*S\s*$/i.test(line)){
+        enIngresos=true;diag.ingresosFound=true;continue;
+      }
 
-    lines.forEach((line,idx)=>{
-      const trimmed=line.trim();
-      if(!trimmed||trimmed.startsWith('---'))return;
-      if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|CODIGO|CÓDIGO|RUBRO|---)/i.test(trimmed))return;
+      // Detectar fin de sección INGRESOS
+      if(enIngresos){
+        // TOTAL INGRESOS line
+        if(/TOTAL\s+INGRESOS/i.test(line)){
+          const vals=extractMoneyValues(line);
+          if(vals.length>0) totalIngresosPdf=vals[vals.length-1].value;
+          enIngresos=false;continue;
+        }
+        // Detectar inicio de DESCUENTOS o APORTES → ya salimos de INGRESOS
+        if(/^\s*(DESCUENTOS|APORTES\s+PATRONO)/i.test(line)){enIngresos=false;continue;}
 
-      const moneyVals=extractMoneyValues(trimmed);
-      if(moneyVals.length>0) diag.linesWithMoney++;
+        // Parsear línea de concepto: CÓDIGO  #SERV  DESCRIPCIÓN  VALOR
+        // El código Efinómina es una palabra corta como SUEBA, BONSE, etc.
+        const vals=extractMoneyValues(line);
+        if(vals.length===0)continue;
 
-      for(const pat of rubroPatterns){
-        const rm=trimmed.match(pat);
-        if(rm){
-          diag.linesWithRubro++;
-          const parts=[rm[1].toUpperCase()];
-          for(let k=2;k<=8;k++){if(rm[k])parts.push(rm[k]);else break;}
-          const codigo=parts.join('-');
-          // Extraer concepto: texto entre el rubro y los números
-          const afterRubro=trimmed.slice(trimmed.indexOf(rm[0])+rm[0].length);
-          const cMatch=afterRubro.match(/^\s*([A-ZÁÉÍÓÚÑa-záéíóúñ\s.,()\/\-&]+)/);
-          const concepto=cMatch?cMatch[1].trim():'';
-
-          if(moneyVals.length>0){
-            // Tomar el último valor monetario de la línea (generalmente es el total)
-            const amount=moneyVals[moneyVals.length-1].value;
-            rows.push({codigo,concepto,amount,line:trimmed,lineNum:idx+1,strategy:1});
+        // Buscar código de concepto al inicio de la línea
+        const parts=line.split(/[\t]+|\s{2,}/);
+        if(parts.length>=2){
+          let codigo='',descripcion='',servidores=0,valor=vals[vals.length-1].value;
+          // El código suele ser la primera columna, alfanumérico corto
+          const firstPart=parts[0].trim();
+          if(/^[A-Z][A-Z0-9]{2,12}$/i.test(firstPart)){
+            codigo=firstPart.toUpperCase();
+            // Servidores suele ser un número pequeño después del código
+            for(let p=1;p<parts.length;p++){
+              const pt=parts[p].trim();
+              if(/^\d{1,4}$/.test(pt)&&parseInt(pt)<5000){servidores=parseInt(pt);continue;}
+              if(pt.length>3&&!/^[\d.,]+$/.test(pt)){descripcion=pt;break;}
+            }
+          }else{
+            // Intentar con split por espacios simples
+            const words=line.split(/\s+/);
+            if(words.length>=2&&/^[A-Z][A-Z0-9]{2,12}$/i.test(words[0])){
+              codigo=words[0].toUpperCase();
+              for(let w=1;w<words.length;w++){
+                if(/^\d{1,4}$/.test(words[w])&&parseInt(words[w])<5000){servidores=parseInt(words[w]);continue;}
+                if(words[w].length>3&&!/^[\d.,]+$/.test(words[w])){
+                  descripcion=words.slice(w).join(' ').replace(/[\d.,]+/g,'').trim();break;
+                }
+              }
+            }
           }
-          break;
+
+          if(codigo){
+            conceptos.push({codigo,descripcion,servidores,valor,lineNum:i+1,lineText:line});
+            sumaConceptos+=valor;
+          }
         }
       }
-    });
-
-    if(rows.length>0) diag.strategies.push('rubro-jerárquico: '+rows.length+' filas');
-
-    // ESTRATEGIA 2: Si no hay rubros, buscar líneas con concepto conocido + valor
-    if(rows.length===0){
-      // Buscar patrones como "GASTOS DE PERSONAL  1.234.567.890"
-      // o "Servicios Personales  1.234.567.890"
-      const conceptoKeywords=[
-        'GASTOS DE PERSONAL','SERVICIOS PERSONALES','SUELDOS','HORAS EXTRAS',
-        'PRIMA','VACACIONES','CESANT','BONIFICACI','CONTRIBUCION','APORTES',
-        'SALUD','PENSION','ARL','RIESGOS LABORALES','PARAFISCAL','SENA','ICBF',
-        'CAJA DE COMPENSACI','INDEMNIZACI','REMUNERACION','SUELDO BASICO',
-        'PRIMA DE SERVICIO','PRIMA DE NAVIDAD','PRIMA DE VACACIONES',
-        'GASTOS DE FUNCIONAMIENTO','TRANSFERENCIAS','NOMINA','NÓMINA'
-      ];
-      lines.forEach((line,idx)=>{
-        const trimmed=line.trim();
-        if(!trimmed||trimmed.startsWith('---'))return;
-        const upper=trimmed.toUpperCase();
-        const moneyVals=extractMoneyValues(trimmed);
-        if(moneyVals.length===0)return;
-
-        for(const kw of conceptoKeywords){
-          if(upper.includes(kw)){
-            // Extraer concepto (la parte de texto)
-            const textPart=trimmed.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
-            const amount=moneyVals[moneyVals.length-1].value;
-            rows.push({codigo:'CC-'+String(rows.length+1).padStart(3,'0'),concepto:textPart,amount,line:trimmed,lineNum:idx+1,strategy:2,keyword:kw});
-            break;
-          }
-        }
-      });
-      if(rows.length>0) diag.strategies.push('concepto-keyword: '+rows.length+' filas');
     }
 
-    // ESTRATEGIA 3: Si aún no hay nada, buscar CUALQUIER línea con código numérico + valor
-    // Patrones como "01 02 03 001  CONCEPTO  1.234.567"
-    if(rows.length===0){
-      const numCodeRe=/^(\d{1,2})\s+(\d{1,2})\s+(\d{1,2})(?:\s+(\d{1,3}))?(?:\s+(\d{1,3}))?\s+(.*)/;
-      lines.forEach((line,idx)=>{
-        const trimmed=line.trim();
-        if(!trimmed||trimmed.startsWith('---'))return;
-        const nm=trimmed.match(numCodeRe);
-        if(nm){
-          const moneyVals=extractMoneyValues(trimmed);
-          if(moneyVals.length>0){
-            const parts=[nm[1],nm[2],nm[3]];
-            if(nm[4])parts.push(nm[4]);if(nm[5])parts.push(nm[5]);
-            const codigo=parts.join('-');
-            const rest=nm[6]||'';
-            const textPart=rest.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
-            rows.push({codigo,concepto:textPart,amount:moneyVals[moneyVals.length-1].value,line:trimmed,lineNum:idx+1,strategy:3});
+    // Si no encontró sección INGRESOS formalmente, buscar conceptos conocidos en todo el texto
+    if(!diag.ingresosFound||conceptos.length===0){
+      const knownCodes=new Set([...Object.values(MAPA_PERMANENTE).flat(),...Object.values(MAPA_TEMPORAL).flat()]);
+      for(let i=0;i<lines.length;i++){
+        const line=lines[i].trim();
+        if(!line||line.startsWith('---'))continue;
+        const vals=extractMoneyValues(line);
+        if(vals.length===0)continue;
+        const words=line.split(/[\t\s]+/);
+        if(words.length>=2){
+          const code=words[0].toUpperCase();
+          if(knownCodes.has(code)&&!conceptos.some(c=>c.codigo===code&&c.lineNum===i+1)){
+            const valor=vals[vals.length-1].value;
+            conceptos.push({codigo:code,descripcion:words.slice(1).join(' ').replace(/[\d.,]+/g,'').trim(),servidores:0,valor,lineNum:i+1,lineText:line});
+            sumaConceptos+=valor;
           }
         }
-      });
-      if(rows.length>0) diag.strategies.push('código-numérico: '+rows.length+' filas');
-    }
-
-    // ESTRATEGIA 4: Capturar TODAS las líneas con valores monetarios significativos (>100.000)
-    if(rows.length===0){
-      lines.forEach((line,idx)=>{
-        const trimmed=line.trim();
-        if(!trimmed||trimmed.startsWith('---'))return;
-        if(/^\s*(TIPO|CTA|SUBC|CONCEPTO|TOTAL|Pag\.|Pág\.|Reporte|Fecha)/i.test(trimmed))return;
-        const moneyVals=extractMoneyValues(trimmed);
-        const bigVals=moneyVals.filter(v=>v.value>=100000);
-        if(bigVals.length>0){
-          const textPart=trimmed.replace(/[\d.,\t$]+/g,' ').replace(/\s+/g,' ').trim();
-          if(textPart.length>3){
-            rows.push({codigo:'LN-'+String(idx+1).padStart(4,'0'),concepto:textPart.slice(0,80),amount:bigVals[bigVals.length-1].value,line:trimmed,lineNum:idx+1,strategy:4});
-          }
-        }
-      });
-      if(rows.length>0) diag.strategies.push('money-lines: '+rows.length+' filas');
-    }
-
-    // Consolidar duplicados
-    const map=new Map();
-    rows.forEach(r=>{
-      const key=r.codigo;
-      if(map.has(key)){
-        const e=map.get(key);
-        e.amount+=r.amount;
-        if(!e.concepto&&r.concepto)e.concepto=r.concepto;
-      }else{
-        map.set(key,{...r});
       }
-    });
+      if(conceptos.length>0) diag.ingresosFound=true;
+    }
 
-    return{unit:currentUnit,rows:[...map.values()],diag};
+    diag.conceptosCount=conceptos.length;
+    diag.totalIngresosPdf=totalIngresosPdf;
+    diag.sumaConceptos=sumaConceptos;
+    diag.cuadre=totalIngresosPdf>0?Math.abs(sumaConceptos-totalIngresosPdf)<1:false;
+
+    return{conceptos,totalIngresosPdf,sumaConceptos,diag};
   }
 
-  // ─── Estado del módulo (para filtros) ───
-  let nominaState={ccRows:[],siifByUnit:{},allText:'',allDiag:[],loaded:[]};
+  // ─── Agrupar conceptos Efinómina por rubro SIIF según tipo de planta ───
+  function agruparPorRubro(conceptos,tipoPdf){
+    const mapa=tipoPdf==='temporal'?MAPA_TEMPORAL:MAPA_PERMANENTE;
+    const revMap=tipoPdf==='temporal'?REV_TEMPORAL:REV_PERMANENTE;
+    const rubroTotals=new Map(); // rubro → {valor, conceptosUsados:[]}
 
-  // ─── Clasificar rubro: permanente, temporal, otro ───
+    conceptos.forEach(c=>{
+      const rubros=revMap[c.codigo];
+      if(rubros&&rubros.length>0){
+        // Si un concepto mapea a múltiples rubros (ej: RJ → sueldo y bonif judicial),
+        // asignar al primero por defecto. Puede refinarse con lógica adicional.
+        const rubro=rubros[0];
+        if(!rubroTotals.has(rubro)) rubroTotals.set(rubro,{valor:0,conceptos:[],descripcion:''});
+        const entry=rubroTotals.get(rubro);
+        entry.valor+=c.valor;
+        if(!entry.conceptos.includes(c.codigo)) entry.conceptos.push(c.codigo);
+        if(!entry.descripcion&&c.descripcion) entry.descripcion=c.descripcion;
+      }
+    });
+
+    // Obtener descripción del rubro del mapa
+    const result=[];
+    for(const[rubro,data]of rubroTotals){
+      result.push({rubro,valor:data.valor,conceptosEfinomina:data.conceptos,descripcionPdf:data.descripcion});
+    }
+    return result;
+  }
+
+  // ─── Estado del módulo ───
+  let nominaState={rubrosAgrupados:[],siifByUnit:{},pdfsParsed:[],loaded:[],allText:''};
+
+  // ─── Clasificar rubro para planta ───
   function clasificarPlanta(codigo){
     const c=codigo.toUpperCase();
-    // A-01-01 = Planta Permanente, A-01-02 = Planta Temporal
-    if(/^A[-\s]0?1[-\s]0?1/i.test(c)) return 'permanente';
-    if(/^A[-\s]0?1[-\s]0?2/i.test(c)) return 'temporal';
-    if(/^A[-\s]0?1/i.test(c)) return 'personal'; // otros gastos de personal
+    if(/^A-0?1-0?1/i.test(c)) return 'permanente';
+    if(/^A-0?1-0?2/i.test(c)) return 'temporal';
+    if(/^A-03-04/i.test(c)) return 'incapacidades';
+    if(/^A-0?1/i.test(c)) return 'personal';
     return 'otro';
   }
 
-  // ─── Process and compare ───
+  // ─── Estado de suficiencia según protocolo ───
+  function estadoSuficiencia(diff,valorNomina){
+    if(diff<0) return {estado:'INSUFICIENTE',icon:'❌',cls:'rojo'};
+    const margen=valorNomina>0?(diff/valorNomina*100):100;
+    if(margen>=5) return {estado:'SUFICIENTE',icon:'✅',cls:'verde'};
+    return {estado:'AJUSTADO',icon:'⚠️',cls:'amarillo'};
+  }
+
+  // ─── PROCESAR ───
   window.__procesarNomina=function(){
     errEl.hidden=true;
     const loaded=unitFiles.filter(Boolean);
-    if(!loaded.length){errEl.hidden=false;errEl.textContent='Primero carga al menos un archivo Excel de ejecución presupuestal.';return;}
-    if(!nominaPdfs.length){errEl.hidden=false;errEl.textContent='Carga al menos un PDF de centro de costos.';return;}
+    if(!loaded.length){errEl.hidden=false;errEl.textContent='Primero carga al menos un archivo Excel de ejecución presupuestal en "Cargar Archivos".';return;}
+    if(!nominaPdfs.length){errEl.hidden=false;errEl.textContent='Carga al menos un PDF de Efinómina (Reporte 10503).';return;}
 
-    // Combine all PDF texts
     let allText='';
-    let allParsed=[];
-    let allDiag=[];
+    const pdfsParsed=[];
+
+    // Paso 1: Parsear cada PDF
     nominaPdfs.forEach(pdf=>{
-      const parsed=parseCentroCostos(pdf.text);
+      const parsed=parseEfinomina10503(pdf.text);
       pdf.parsed=parsed;
-      allText+='══ '+pdf.name+' ══\n'+pdf.text+'\n\n';
-      allParsed=allParsed.concat(parsed.rows);
-      allDiag.push({name:pdf.name,...parsed.diag});
+      allText+='══ '+pdf.name+' ('+pdf.tipo.toUpperCase()+(pdf.sufijo?' '+pdf.sufijo:'')+') ══\n'+pdf.text+'\n\n';
+      pdfsParsed.push({name:pdf.name,tipo:pdf.tipo,sufijo:pdf.sufijo,sit:pdf.sit||'',...parsed});
     });
 
-    // Consolidate parsed rows
-    const ccMap=new Map();
-    allParsed.forEach(r=>{
-      const key=r.codigo;
-      if(ccMap.has(key)){const e=ccMap.get(key);e.amount+=r.amount;if(!e.concepto&&r.concepto)e.concepto=r.concepto;}
-      else ccMap.set(key,{...r});
+    // Paso 2: Agrupar conceptos por rubro SIIF
+    const rubroMap=new Map(); // rubro → {valor, conceptos, tipo}
+    pdfsParsed.forEach(pp=>{
+      const agrupados=agruparPorRubro(pp.conceptos,pp.tipo);
+      agrupados.forEach(a=>{
+        const key=a.rubro;
+        if(rubroMap.has(key)){
+          const e=rubroMap.get(key);
+          e.valor+=a.valor;
+          a.conceptosEfinomina.forEach(c=>{if(!e.conceptos.includes(c))e.conceptos.push(c);});
+        }else{
+          rubroMap.set(key,{rubro:a.rubro,valor:a.valor,conceptos:[...a.conceptosEfinomina],descPdf:a.descripcionPdf,planta:clasificarPlanta(a.rubro)});
+        }
+      });
     });
-    const ccRows=[...ccMap.values()];
+    const rubrosAgrupados=[...rubroMap.values()].sort((a,b)=>a.rubro.localeCompare(b.rubro));
 
-    // Build SIIF data by Sub Unidad Ejecutora
+    // Build SIIF data by Sub UE
     const siifByUnit={};
     loaded.forEach(u=>{
       const uName=u.unitName||u.name;
@@ -2080,251 +2165,305 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     selSubUE.innerHTML='<option value="all">📋 Todas las Sub Unidades (Consolidado)</option>';
     Object.keys(siifByUnit).forEach(uName=>{
       const opt=document.createElement('option');
-      opt.value=uName;
-      opt.textContent='🏢 '+uName;
+      opt.value=uName;opt.textContent='🏢 '+uName;
       selSubUE.appendChild(opt);
     });
     if(prevVal&&[...selSubUE.options].some(o=>o.value===prevVal)) selSubUE.value=prevVal;
 
-    // Save state for filtering
-    nominaState={ccRows,siifByUnit,allText,allDiag,loaded};
+    // Render cuadre de ingresos
+    renderCuadreIngresos(pdfsParsed);
 
-    // Render with current filter
+    // Save state
+    nominaState={rubrosAgrupados,siifByUnit,pdfsParsed,loaded,allText};
+
+    // Render
     renderNominaComparison();
-
     document.getElementById('nominaResults').hidden=false;
   };
 
-  // ─── Filter handler ───
   window.__filtrarNomina=function(){ renderNominaComparison(); };
 
-  // ─── Main render function (called on process and on filter change) ───
+  // ─── Cuadre de Ingresos ───
+  function renderCuadreIngresos(pdfsParsed){
+    const body=document.getElementById('nominaCuadreBody');
+    if(!body)return;
+    let html='';
+    let allOk=true;
+    pdfsParsed.forEach(pp=>{
+      const d=pp.diag;
+      const badge=pp.tipo==='temporal'
+        ?`<span style="padding:2px 6px;border-radius:3px;font-size:.68rem;font-weight:700;background:rgba(142,68,173,0.15);color:#8E44AD;">TEMPORAL${pp.sufijo?' '+pp.sufijo:''}</span>`
+        :`<span style="padding:2px 6px;border-radius:3px;font-size:.68rem;font-weight:700;background:rgba(41,128,185,0.15);color:#2980B9;">PERMANENTE</span>`;
+      const cuadreOk=d.cuadre;
+      if(!cuadreOk&&d.totalIngresosPdf>0) allOk=false;
+      const icon=cuadreOk?'✅':(d.totalIngresosPdf>0?'❌':'⚠');
+      const diffCuadre=d.sumaConceptos-d.totalIngresosPdf;
+      html+=`<div style="display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);">
+        <span>${icon}</span>
+        <strong style="font-size:.82rem;">${pp.name}</strong> ${badge}
+        <span style="font-size:.78rem;color:var(--muted);">${d.conceptosCount} conceptos</span>
+        <span style="font-size:.78rem;">Suma: ${fmtF(d.sumaConceptos)}</span>
+        ${d.totalIngresosPdf>0?`<span style="font-size:.78rem;">Total PDF: ${fmtF(d.totalIngresosPdf)}</span>
+        <span style="font-size:.78rem;color:${cuadreOk?'var(--sem-verde)':'var(--sem-rojo)'};">${cuadreOk?'✓ Cuadra':'✗ Dif: '+fmtF(diffCuadre)}</span>`
+        :'<span style="font-size:.78rem;color:var(--muted);">TOTAL INGRESOS no encontrado</span>'}
+      </div>`;
+    });
+    if(!allOk) html+='<div style="margin-top:8px;padding:8px 12px;background:var(--sem-rojo-bg);border-radius:6px;font-size:.8rem;color:var(--sem-rojo);">⚠ Hay PDFs donde la suma de conceptos NO coincide con TOTAL INGRESOS. Verifique los datos antes de continuar.</div>';
+    body.innerHTML=html;
+    const card=document.getElementById('nominaCuadreCard');
+    if(card) card.style.borderLeft=allOk?'4px solid var(--sem-verde)':'4px solid var(--sem-rojo)';
+  }
+
+  // ─── Main render function ───
   function renderNominaComparison(){
-    const {ccRows,siifByUnit,allText,allDiag,loaded}=nominaState;
-    const selSubUE=document.getElementById('nominaSubUE');
-    const filterUE=selSubUE?selSubUE.value:'all';
+    const {rubrosAgrupados,siifByUnit,pdfsParsed,loaded,allText}=nominaState;
+    const filterUE=document.getElementById('nominaSubUE')?.value||'all';
+    const filterSit=document.getElementById('nominaSitFondos')?.value||'all';
+    const mesesAdic=parseInt(document.getElementById('nominaMeses')?.value||'3')||3;
 
-    // Get SIIF rows for selected Sub UE
+    // Get SIIF rows for selected Sub UE, filtered by situación
     let siifRows;
-    if(filterUE==='all'){
-      siifRows=loaded.flatMap(u=>u.rows);
-    }else{
-      siifRows=siifByUnit[filterUE]||[];
-    }
+    if(filterUE==='all') siifRows=loaded.flatMap(u=>u.rows);
+    else siifRows=siifByUnit[filterUE]||[];
+    if(filterSit!=='all') siifRows=siifRows.filter(r=>r.situacion.toUpperCase()===filterSit);
 
-    // Sub UE info
+    // Info
     const infoEl=document.getElementById('nominaSubUEInfo');
     if(infoEl){
-      if(filterUE==='all') infoEl.textContent=Object.keys(siifByUnit).length+' sub unidades cargadas';
-      else infoEl.textContent=siifRows.length+' rubros en esta sub unidad';
+      let txt=filterUE==='all'?Object.keys(siifByUnit).length+' sub unidades':siifRows.length+' rubros';
+      if(filterSit!=='all') txt+=' · '+filterSit;
+      infoEl.textContent=txt;
     }
 
-    // ── Planta Permanente vs Temporal (from SIIF data) ──
-    const permanenteRows=siifRows.filter(r=>clasificarPlanta(r.codigo)==='permanente');
-    const temporalRows=siifRows.filter(r=>clasificarPlanta(r.codigo)==='temporal');
-    const personalRows=siifRows.filter(r=>{const c=clasificarPlanta(r.codigo);return c==='permanente'||c==='temporal'||c==='personal';});
-
-    const sumAprop=rows=>rows.reduce((s,r)=>s+r.aprop,0);
-    const sumOblig=rows=>rows.reduce((s,r)=>s+r.obligacion,0);
-    const sumPagos=rows=>rows.reduce((s,r)=>s+r.pagos,0);
-
-    const permAprop=sumAprop(permanenteRows),permOblig=sumOblig(permanenteRows);
-    const tempAprop=sumAprop(temporalRows),tempOblig=sumOblig(temporalRows);
-    const totPersonalAprop=sumAprop(personalRows),totPersonalOblig=sumOblig(personalRows);
-
-    document.getElementById('nkPermanente').textContent=fmtM(permAprop);
-    document.getElementById('nkPermanenteSub').textContent='Oblig: '+fmtM(permOblig)+' | '+permanenteRows.length+' rubros';
-    document.getElementById('nkTemporal').textContent=fmtM(tempAprop);
-    document.getElementById('nkTemporalSub').textContent='Oblig: '+fmtM(tempOblig)+' | '+temporalRows.length+' rubros';
-    document.getElementById('nkTotalPersonal').textContent=fmtM(totPersonalAprop);
-    document.getElementById('nkTotalPersonalSub').textContent='Oblig: '+fmtM(totPersonalOblig)+' | '+personalRows.length+' rubros';
-
-    // Build SIIF map
+    // Build SIIF map with CDP_X_COMP as key metric
     const siifMap=new Map();
     siifRows.forEach(r=>{
       if(siifMap.has(r.codigo)){
         const e=siifMap.get(r.codigo);
-        e.aprop+=r.aprop;e.compromiso+=r.compromiso;e.obligacion+=r.obligacion;e.pagos+=r.pagos;
+        e.cdp_x_comp+=r.cdp_x_comp;e.aprop+=r.aprop;e.cdp+=r.cdp;e.compromiso+=r.compromiso;e.obligacion+=r.obligacion;e.pagos+=r.pagos;
       }else{
-        siifMap.set(r.codigo,{codigo:r.codigo,concepto:r.concepto,aprop:r.aprop,compromiso:r.compromiso,obligacion:r.obligacion,pagos:r.pagos,level:r.level,tipo:r.tipo});
+        siifMap.set(r.codigo,{codigo:r.codigo,concepto:r.concepto,cdp_x_comp:r.cdp_x_comp,aprop:r.aprop,cdp:r.cdp,compromiso:r.compromiso,obligacion:r.obligacion,pagos:r.pagos,level:r.level,tipo:r.tipo,situacion:r.situacion});
       }
     });
 
-    // Build comparison rows
+    // ── Planta KPIs (from SIIF) ──
+    const permSiif=siifRows.filter(r=>clasificarPlanta(r.codigo)==='permanente');
+    const tempSiif=siifRows.filter(r=>clasificarPlanta(r.codigo)==='temporal');
+    const incapSiif=siifRows.filter(r=>clasificarPlanta(r.codigo)==='incapacidades');
+    const personalSiif=[...permSiif,...tempSiif,...incapSiif];
+
+    const sumCdpXC=rows=>rows.reduce((s,r)=>s+r.cdp_x_comp,0);
+    document.getElementById('nkPermanente').textContent=fmtM(sumCdpXC(permSiif));
+    document.getElementById('nkPermanenteSub').textContent='CDP x Comp. | '+permSiif.length+' rubros';
+    document.getElementById('nkTemporal').textContent=fmtM(sumCdpXC(tempSiif));
+    document.getElementById('nkTemporalSub').textContent='CDP x Comp. | '+tempSiif.length+' rubros';
+    document.getElementById('nkTotalPersonal').textContent=fmtM(sumCdpXC(personalSiif));
+    document.getElementById('nkTotalPersonalSub').textContent='CDP x Comp. total | '+personalSiif.length+' rubros';
+
+    // ── Build comparison rows ──
     const compRows=[];
-    const matchedCodes=new Set();
-
-    ccRows.forEach(cc=>{
-      let siif=siifMap.get(cc.codigo);
-      if(siif){
-        matchedCodes.add(cc.codigo);
-        compRows.push({codigo:cc.codigo,concepto:siif.concepto||cc.concepto,aprop:siif.aprop,nomina:cc.amount,diff:siif.aprop-cc.amount,pctEjec:siif.aprop>0?(cc.amount/siif.aprop*100):0,level:siif.level,matched:true,planta:clasificarPlanta(cc.codigo)});
-        return;
-      }
-      // Partial match
-      let bestMatch=null;
-      const ccParts=cc.codigo.split('-');
-      for(const[key,val]of siifMap){
-        const sParts=key.split('-');
-        const minLen=Math.min(ccParts.length,sParts.length,4);
-        let match=true;
-        for(let i=0;i<minLen;i++){if(ccParts[i].replace(/^0+/,'')!==sParts[i].replace(/^0+/,'')){match=false;break;}}
-        if(match&&minLen>=3&&(!bestMatch||sParts.length>bestMatch.parts)) bestMatch={codigo:key,data:val,parts:sParts.length};
-      }
-      if(bestMatch&&!matchedCodes.has(bestMatch.codigo)){
-        matchedCodes.add(bestMatch.codigo);
-        compRows.push({codigo:cc.codigo,concepto:bestMatch.data.concepto||cc.concepto,aprop:bestMatch.data.aprop,nomina:cc.amount,diff:bestMatch.data.aprop-cc.amount,pctEjec:bestMatch.data.aprop>0?(cc.amount/bestMatch.data.aprop*100):0,level:bestMatch.data.level,matched:true,partialMatch:bestMatch.codigo,planta:clasificarPlanta(cc.codigo)});
-        return;
-      }
-      // Concept match
-      if(cc.concepto&&cc.concepto.length>5){
-        const ccUp=cc.concepto.toUpperCase();
-        let best=null,bestS=0;
+    rubrosAgrupados.forEach(ra=>{
+      // Find matching SIIF rubro
+      let siif=siifMap.get(ra.rubro);
+      // Try partial match if exact not found
+      if(!siif){
         for(const[key,val]of siifMap){
-          if(matchedCodes.has(key))continue;
-          const sUp=(val.concepto||'').toUpperCase();if(!sUp)continue;
-          const cW=ccUp.split(/\s+/).filter(w=>w.length>3),sW=sUp.split(/\s+/).filter(w=>w.length>3);
-          const com=cW.filter(w=>sW.some(sw=>sw.includes(w)||w.includes(sw)));
-          const sc=com.length/Math.max(cW.length,1);
-          if(sc>0.5&&sc>bestS){bestS=sc;best={codigo:key,data:val};}
-        }
-        if(best){
-          matchedCodes.add(best.codigo);
-          compRows.push({codigo:cc.codigo,concepto:best.data.concepto,aprop:best.data.aprop,nomina:cc.amount,diff:best.data.aprop-cc.amount,pctEjec:best.data.aprop>0?(cc.amount/best.data.aprop*100):0,level:best.data.level||4,matched:true,partialMatch:'≈'+best.codigo,conceptMatch:true,planta:clasificarPlanta(cc.codigo)});
-          return;
+          const rParts=ra.rubro.split('-'),sParts=key.split('-');
+          const minLen=Math.min(rParts.length,sParts.length);
+          let match=true;
+          for(let i=0;i<minLen;i++){if(rParts[i].replace(/^0+/,'')!==sParts[i].replace(/^0+/,'')){match=false;break;}}
+          if(match&&minLen>=4){siif=val;break;}
         }
       }
-      compRows.push({codigo:cc.codigo,concepto:cc.concepto||'(Solo en Centro de Costos)',aprop:0,nomina:cc.amount,diff:-cc.amount,pctEjec:0,level:4,matched:false,planta:clasificarPlanta(cc.codigo)});
-    });
 
-    compRows.sort((a,b)=>a.codigo.localeCompare(b.codigo));
+      const cdpXComp=siif?siif.cdp_x_comp:0;
+      const diff=cdpXComp-ra.valor;
+      const est=estadoSuficiencia(diff,ra.valor);
+      const margen=ra.valor>0?(diff/ra.valor*100):cdpXComp>0?100:0;
+
+      // Adiciones
+      const costoMensual=ra.valor*2; // quincena × 2
+      const necesidad=costoMensual*mesesAdic;
+      const adicion=Math.max(0,necesidad-cdpXComp);
+
+      compRows.push({
+        rubro:ra.rubro,
+        concepto:siif?siif.concepto:ra.descPdf||ra.rubro,
+        conceptosEfinomina:ra.conceptos,
+        cdpXComp,
+        valorNomina:ra.valor,
+        diff,margen,
+        ...est,
+        planta:ra.planta,
+        matched:!!siif,
+        costoMensual,necesidad,adicion
+      });
+    });
 
     // Totals
-    const totAprop=compRows.reduce((s,r)=>s+r.aprop,0);
-    const totNomina=compRows.reduce((s,r)=>s+r.nomina,0);
-    const totDiff=totAprop-totNomina;
-    const totPct=totAprop>0?(totNomina/totAprop*100):0;
+    const totCdp=compRows.reduce((s,r)=>s+r.cdpXComp,0);
+    const totNomina=compRows.reduce((s,r)=>s+r.valorNomina,0);
+    const totDiff=totCdp-totNomina;
+    const cntSuficiente=compRows.filter(r=>r.estado==='SUFICIENTE').length;
+    const cntAjustado=compRows.filter(r=>r.estado==='AJUSTADO').length;
+    const cntInsuficiente=compRows.filter(r=>r.estado==='INSUFICIENTE').length;
 
     // Render KPIs
-    document.getElementById('nkAprop').textContent=fmtM(totAprop);
-    document.getElementById('nkApropSub').textContent=compRows.filter(r=>r.matched).length+' rubros emparejados';
+    document.getElementById('nkAprop').textContent=fmtM(totCdp);
+    document.getElementById('nkApropSub').textContent=compRows.filter(r=>r.matched).length+' rubros encontrados en SIIF';
     document.getElementById('nkCc').textContent=fmtM(totNomina);
-    document.getElementById('nkCcSub').textContent=ccRows.length+' rubros en PDF';
+    document.getElementById('nkCcSub').textContent=pdfsParsed.reduce((s,p)=>s+p.conceptos.length,0)+' conceptos Efinómina';
     document.getElementById('nkDiff').textContent=fmtM(totDiff);
-    document.getElementById('nkDiffSub').textContent=totDiff>=0?'Saldo a favor':'Déficit';
+    document.getElementById('nkDiffSub').textContent=totDiff>=0?'Saldo disponible':'⚠ Déficit';
     const nkDiffCard=document.getElementById('nkDiffCard');
     if(nkDiffCard)nkDiffCard.className='kpi-card '+(totDiff>=0?'verde':'rojo');
-    document.getElementById('nkPct').textContent=totPct.toFixed(1)+'%';
-    document.getElementById('nkPctSub').textContent='Nómina / Apropiación';
+    document.getElementById('nkPct').textContent=cntSuficiente+'/'+compRows.length;
+    document.getElementById('nkPctSub').textContent='✅'+cntSuficiente+' ⚠️'+cntAjustado+' ❌'+cntInsuficiente;
     const nkPctCard=document.getElementById('nkPctCard');
-    if(nkPctCard)nkPctCard.className='kpi-card '+semCls(totPct);
+    if(nkPctCard)nkPctCard.className='kpi-card '+(cntInsuficiente>0?'rojo':cntAjustado>0?'amarillo':'verde');
 
-    // Render table — grouped by planta
+    // ── Render table ──
     const tbody=document.getElementById('tbodyNomina');
     const tfoot=document.getElementById('tfootNomina');
     tbody.innerHTML='';tfoot.innerHTML='';
 
     if(compRows.length===0){
-      tbody.innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No se encontraron datos comparables. Revisa el texto extraído abajo.</td></tr>';
+      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No se encontraron conceptos de INGRESOS en los PDFs. Revisa el texto extraído.</td></tr>';
     }else{
-      // Group: permanente first, then temporal, then others
       const groups=[
         {key:'permanente',label:'🏛 PLANTA PERMANENTE (A-01-01)',color:'#2980B9'},
         {key:'temporal',label:'📋 PLANTA TEMPORAL (A-01-02)',color:'#8E44AD'},
-        {key:'personal',label:'👥 OTROS GASTOS DE PERSONAL (A-01)',color:'var(--gold)'},
+        {key:'incapacidades',label:'🏥 INCAPACIDADES / LICENCIAS (A-03-04)',color:'#E67E22'},
         {key:'otro',label:'📁 OTROS RUBROS',color:'var(--muted)'}
       ];
 
       groups.forEach(g=>{
         const gRows=compRows.filter(r=>r.planta===g.key);
         if(!gRows.length)return;
-        // Group header
-        const grpAprop=gRows.reduce((s,r)=>s+r.aprop,0);
-        const grpNomina=gRows.reduce((s,r)=>s+r.nomina,0);
-        const grpDiff=grpAprop-grpNomina;
-        const grpPct=grpAprop>0?(grpNomina/grpAprop*100):0;
+        const grpCdp=gRows.reduce((s,r)=>s+r.cdpXComp,0);
+        const grpNom=gRows.reduce((s,r)=>s+r.valorNomina,0);
+        const grpDiff=grpCdp-grpNom;
+        const grpEst=estadoSuficiencia(grpDiff,grpNom);
         const htr=document.createElement('tr');
         htr.style.cssText='background:var(--sidebar-bg);color:#fff;font-weight:700;';
-        htr.innerHTML=`<td colspan="2" style="border-left:4px solid ${g.color};padding-left:12px;">${g.label}</td>
-          <td class="num">${fmtF(grpAprop)}</td><td class="num">${fmtF(grpNomina)}</td>
+        htr.innerHTML=`<td colspan="3" style="border-left:4px solid ${g.color};padding-left:12px;">${g.label}</td>
+          <td class="num">${fmtF(grpCdp)}</td><td class="num">${fmtF(grpNom)}</td>
           <td class="num ${grpDiff>=0?'diff-pos':'diff-neg'}">${grpDiff>=0?'+':''}${fmtF(grpDiff)}</td>
-          <td class="num">${grpPct.toFixed(1)}%</td><td><span class="sem sem-${semCls(grpPct)}"><span class="sem-dot"></span>${semLbl(grpPct)}</span></td>`;
+          <td class="num">${grpNom>0?(grpDiff/grpNom*100).toFixed(1)+'%':'—'}</td>
+          <td>${grpEst.icon} ${grpEst.estado}</td>`;
         tbody.appendChild(htr);
 
         gRows.forEach(r=>{
-          const p=r.pctEjec;const sc=r.matched?semCls(p):'azul';
-          const diffCls=r.diff>0?'diff-pos':r.diff<0?'diff-neg':'diff-zero';
-          let lc='';if(r.level<=1)lc='level-1';else if(r.level===2)lc='level-2';else if(r.level===3)lc='level-3';
-          const tr=document.createElement('tr');tr.className=lc;
+          const tr=document.createElement('tr');
           tr.innerHTML=`
-            <td style="font-size:.72rem;color:var(--muted)">${r.codigo}${r.partialMatch?' ≈':''}${!r.matched?' ⚠':''}</td>
-            <td style="white-space:normal;min-width:140px;max-width:280px">${r.concepto||'—'}</td>
-            <td class="num">${r.aprop>0?fmtF(r.aprop):'—'}</td>
-            <td class="num">${fmtF(r.nomina)}</td>
-            <td class="num ${diffCls}">${r.diff>=0?'+':''}${fmtF(r.diff)}</td>
-            <td class="num"><div class="prog-bar"><div class="prog-fill" style="width:${Math.min(p,100)}%;background:${p>=80?'var(--sem-verde)':p>=50?'var(--sem-amarillo)':'var(--sem-rojo)'}"></div></div>${p.toFixed(1)}%</td>
-            <td><span class="sem sem-${sc}"><span class="sem-dot"></span>${r.matched?semLbl(p):'Sin match'}</span></td>`;
+            <td style="font-size:.72rem;color:var(--muted)">${r.rubro}${!r.matched?' ⚠':''}</td>
+            <td style="white-space:normal;min-width:120px;max-width:240px">${r.concepto||'—'}</td>
+            <td style="font-size:.72rem;color:var(--accent);max-width:120px;white-space:normal">${r.conceptosEfinomina.join(', ')}</td>
+            <td class="num">${r.cdpXComp>0?fmtF(r.cdpXComp):'—'}</td>
+            <td class="num">${fmtF(r.valorNomina)}</td>
+            <td class="num ${r.diff>=0?'diff-pos':'diff-neg'}">${r.diff>=0?'+':''}${fmtF(r.diff)}</td>
+            <td class="num">${r.margen.toFixed(1)}%</td>
+            <td><span class="sem sem-${r.cls}"><span class="sem-dot"></span>${r.icon} ${r.estado}</span></td>`;
           tbody.appendChild(tr);
         });
       });
 
-      // Footer totals
-      const tpT=totAprop>0?(totNomina/totAprop*100):0;const stc=semCls(tpT);
+      const totEst=estadoSuficiencia(totDiff,totNomina);
       tfoot.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
-        <td colspan="2">TOTAL GENERAL</td>
-        <td class="num">${fmtF(totAprop)}</td>
-        <td class="num">${fmtF(totNomina)}</td>
+        <td colspan="3">TOTAL GENERAL</td>
+        <td class="num">${fmtF(totCdp)}</td><td class="num">${fmtF(totNomina)}</td>
         <td class="num ${totDiff>=0?'diff-pos':'diff-neg'}">${totDiff>=0?'+':''}${fmtF(totDiff)}</td>
-        <td class="num">${tpT.toFixed(1)}%</td>
-        <td><span class="sem sem-${stc}"><span class="sem-dot"></span>${semLbl(tpT)}</span></td>
+        <td class="num">${totNomina>0?(totDiff/totNomina*100).toFixed(1)+'%':'—'}</td>
+        <td>${totEst.icon} ${totEst.estado}</td>
       </tr>`;
     }
 
-    // Render alerts
-    const alerts=[];
-    if(ccRows.length===0){
-      alerts.push({level:'critica',icon:'⚠',msg:'No se pudieron extraer rubros ni valores del PDF. Revisa el texto extraído abajo.'});
+    // ── Adiciones Presupuestales ──
+    const insufRubros=compRows.filter(r=>r.adicion>0);
+    const adicionesCard=document.getElementById('nominaAdicionesCard');
+    if(insufRubros.length>0){
+      adicionesCard.hidden=false;
+      const tbodyAd=document.getElementById('tbodyAdiciones');
+      const tfootAd=document.getElementById('tfootAdiciones');
+      tbodyAd.innerHTML='';tfootAd.innerHTML='';
+      adicionesCard.querySelector('.card-header').textContent='📈 Cálculo de Adiciones Presupuestales — '+mesesAdic+' meses';
+
+      insufRubros.forEach(r=>{
+        const tr=document.createElement('tr');
+        tr.innerHTML=`
+          <td style="font-size:.75rem">${r.rubro}</td>
+          <td style="white-space:normal">${r.concepto||'—'}</td>
+          <td class="num">${fmtF(r.costoMensual)}</td>
+          <td class="num">${fmtF(r.necesidad)}</td>
+          <td class="num">${fmtF(r.cdpXComp)}</td>
+          <td class="num diff-neg" style="font-weight:700">${fmtF(r.adicion)}</td>
+          <td><span class="sem sem-rojo"><span class="sem-dot"></span>Requiere adición</span></td>`;
+        tbodyAd.appendChild(tr);
+      });
+
+      const totAdicion=insufRubros.reduce((s,r)=>s+r.adicion,0);
+      tfootAd.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
+        <td colspan="5">TOTAL ADICIÓN REQUERIDA</td>
+        <td class="num diff-neg" style="font-size:1rem;">${fmtF(totAdicion)}</td>
+        <td>${insufRubros.length} rubros</td>
+      </tr>`;
     }else{
-      const unmatched=compRows.filter(r=>!r.matched);
-      if(unmatched.length)alerts.push({level:'media',icon:'⚠',msg:`${unmatched.length} rubro(s) sin correspondencia en SIIF.`});
-      const overExec=compRows.filter(r=>r.matched&&r.pctEjec>100);
-      if(overExec.length)alerts.push({level:'critica',icon:'🚨',msg:`${overExec.length} rubro(s) con nómina > apropiación.`});
-      // Alertas por planta
-      const permRows=compRows.filter(r=>r.planta==='permanente');
-      const tempRows=compRows.filter(r=>r.planta==='temporal');
-      if(permRows.length){
-        const permPct=sumAprop(permanenteRows)>0?(permRows.reduce((s,r)=>s+r.nomina,0)/sumAprop(permanenteRows)*100):0;
-        alerts.push({level:permPct>100?'critica':'info',icon:'🏛',msg:`Planta Permanente: ${permRows.length} rubros, ejecución nómina ${permPct.toFixed(1)}%.`});
-      }
-      if(tempRows.length){
-        const tempPct=sumAprop(temporalRows)>0?(tempRows.reduce((s,r)=>s+r.nomina,0)/sumAprop(temporalRows)*100):0;
-        alerts.push({level:tempPct>100?'critica':'info',icon:'📋',msg:`Planta Temporal: ${tempRows.length} rubros, ejecución nómina ${tempPct.toFixed(1)}%.`});
-      }
-      if(filterUE!=='all') alerts.push({level:'info',icon:'🏢',msg:`Filtrado por: ${filterUE}`});
-      if(!alerts.length)alerts.push({level:'info',icon:'✅',msg:'Comparativo dentro de parámetros normales.'});
+      adicionesCard.hidden=true;
     }
 
-    // Diagnóstico
-    let diagText='── DIAGNÓSTICO ──\n';
-    allDiag.forEach(d=>{
-      diagText+=`📄 ${d.name}: ${d.totalLines} líneas, ${d.linesWithMoney} con valores monetarios, ${d.linesWithRubro} con código rubro\n`;
-      if(d.strategies.length) diagText+='   Estrategias: '+d.strategies.join(', ')+'\n';
-      else diagText+='   ⚠ Ninguna estrategia encontró datos\n';
-    });
-    diagText+=`\nSIIF cargado: ${siifRows.length} rubros`;
-    if(filterUE!=='all') diagText+=` (filtrado: ${filterUE})`;
-    diagText+=`\nRubros SIIF ejemplo: ${[...siifMap.keys()].slice(0,5).join(', ')}\n`;
-    diagText+=`Planta Permanente (A-01-01): ${permanenteRows.length} rubros | Temporal (A-01-02): ${temporalRows.length} rubros\n`;
-    diagText+='\n── TEXTO EXTRAÍDO ──\n';
+    // ── Alerts ──
+    const alerts=[];
+    if(compRows.length===0){
+      alerts.push({level:'critica',icon:'⚠',msg:'No se encontraron conceptos de INGRESOS. Verifica que los PDFs sean del reporte 10503 de Efinómina.'});
+    }else{
+      if(cntInsuficiente>0) alerts.push({level:'critica',icon:'❌',msg:`${cntInsuficiente} rubro(s) con apropiación INSUFICIENTE. Se requieren adiciones presupuestales.`});
+      if(cntAjustado>0) alerts.push({level:'media',icon:'⚠️',msg:`${cntAjustado} rubro(s) con apropiación AJUSTADA (margen < 5%).`});
+      if(cntSuficiente>0) alerts.push({level:'info',icon:'✅',msg:`${cntSuficiente} rubro(s) con apropiación SUFICIENTE.`});
+      const noMatch=compRows.filter(r=>!r.matched);
+      if(noMatch.length) alerts.push({level:'media',icon:'🔍',msg:`${noMatch.length} rubro(s) del mapeo no encontrados en SIIF: ${noMatch.map(r=>r.rubro).join(', ')}.`});
+      // Cuadre validation
+      pdfsParsed.forEach(pp=>{
+        if(pp.diag.totalIngresosPdf>0&&!pp.diag.cuadre){
+          alerts.push({level:'critica',icon:'⛔',msg:`${pp.name}: Suma conceptos (${fmtF(pp.diag.sumaConceptos)}) ≠ TOTAL INGRESOS PDF (${fmtF(pp.diag.totalIngresosPdf)}). Diferencia: ${fmtF(pp.diag.sumaConceptos-pp.diag.totalIngresosPdf)}`});
+        }
+      });
+      if(filterSit!=='all') alerts.push({level:'info',icon:'🏢',msg:`Filtrado por situación: ${filterSit}`});
+      if(!alerts.length) alerts.push({level:'info',icon:'✅',msg:'Todos los rubros cuentan con apropiación suficiente.'});
+    }
 
     const alertEl=document.getElementById('nominaAlerts');alertEl.innerHTML='';
     alerts.forEach(a=>{
       alertEl.insertAdjacentHTML('beforeend',`<div class="alert-item ${a.level}"><span class="alert-icon">${a.icon}</span><span>${a.msg}</span></div>`);
     });
 
+    // ── Diagnóstico ──
+    let diagText='══ DIAGNÓSTICO EFINÓMINA 10503 ══\n';
+    pdfsParsed.forEach(pp=>{
+      const d=pp.diag;
+      diagText+=`\n📄 ${pp.name} [${pp.tipo.toUpperCase()}${pp.sufijo?' '+pp.sufijo:''}]\n`;
+      diagText+=`   Sección INGRESOS: ${d.ingresosFound?'✓ Encontrada':'✗ No encontrada'}\n`;
+      diagText+=`   Conceptos extraídos: ${d.conceptosCount}\n`;
+      diagText+=`   Suma conceptos: ${fmtF(d.sumaConceptos)}\n`;
+      if(d.totalIngresosPdf>0){
+        diagText+=`   TOTAL INGRESOS PDF: ${fmtF(d.totalIngresosPdf)}\n`;
+        diagText+=`   Cuadre: ${d.cuadre?'✓ OK':'✗ DESCUADRADO (dif: '+fmtF(d.sumaConceptos-d.totalIngresosPdf)+')'}\n`;
+      }
+      diagText+=`   Conceptos: ${pp.conceptos.map(c=>c.codigo+' = '+fmtF(c.valor)).join(', ')}\n`;
+    });
+    diagText+=`\n══ MAPEO RUBRO SIIF ══\n`;
+    rubrosAgrupados.forEach(ra=>{
+      diagText+=`${ra.rubro} ← [${ra.conceptos.join(', ')}] = ${fmtF(ra.valor)}\n`;
+    });
+    diagText+=`\n══ SIIF CARGADO ══\n`;
+    diagText+=`Rubros: ${siifRows.length}`;
+    if(filterUE!=='all') diagText+=` (filtrado: ${filterUE})`;
+    if(filterSit!=='all') diagText+=` (sit: ${filterSit})`;
+    diagText+=`\nEjemplos: ${[...siifMap.keys()].slice(0,8).join(', ')}\n`;
+    diagText+='\n══ TEXTO EXTRAÍDO ══\n';
+
     const rawEl=document.getElementById('nominaRawText');
-    rawEl.textContent=diagText+allText.slice(0,15000)+(allText.length>15000?'\n\n... (texto truncado)':'');
-    if(ccRows.length===0) rawEl.classList.add('show');
+    rawEl.textContent=diagText+allText.slice(0,15000)+(allText.length>15000?'\n... (truncado)':'');
+    if(compRows.length===0) rawEl.classList.add('show');
   }
 
 })();
