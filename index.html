@@ -1455,13 +1455,19 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
           </div>
         </div>
 
-        <!-- Filtros: Sub UE + Situación de Fondos -->
+        <!-- Filtros: Sub UE + Subunidad CC + Situación de Fondos -->
         <div class="card" style="margin-bottom:18px;">
           <div class="card-body" style="display:flex;flex-wrap:wrap;gap:14px;align-items:center;">
             <div style="flex:1;min-width:200px;">
               <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px;">Sub Unidad Ejecutora</label>
               <select id="nominaSubUE" class="filter-select" onchange="window.__filtrarNomina()" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;">
                 <option value="all">📋 Todas las Sub Unidades</option>
+              </select>
+            </div>
+            <div style="flex:1;min-width:200px;">
+              <label style="font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);display:block;margin-bottom:4px;">Subunidad por Centro de Costos</label>
+              <select id="nominaSubunidadCC" class="filter-select" onchange="window.__filtrarNomina()" style="width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:.85rem;">
+                <option value="all">🏢 Todas las Subunidades</option>
               </select>
             </div>
             <div style="flex:1;min-width:160px;">
@@ -1535,7 +1541,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
             <div class="table-wrap">
               <table id="tablaNomina">
                 <thead><tr>
-                  <th>Rubro SIIF</th><th>Concepto</th><th>Conceptos Efinómina</th>
+                  <th>Rubro SIIF</th><th>Concepto</th><th>Subunidad</th><th>Conceptos Efinómina</th>
                   <th class="num">CDP x Comprom.</th><th class="num">Valor Nómina</th>
                   <th class="num">Diferencia</th><th class="num">Margen</th><th>Estado</th>
                 </tr></thead>
@@ -2243,6 +2249,28 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     return {tipo:'permanente',sufijo:'',ue:'',sit:''};
   }
 
+  // ─── Mapeo Subunidad por Centro de Costos ───
+  const SUBUNIDADES={
+    '02':{codigo:'27-01-01-225',nombre:'UE 02 — 27-01-01-225',corto:'UE 02 (225)'},
+    '08':{codigo:'27-01-01-825',nombre:'UE 08 — 27-01-01-825',corto:'UE 08 (825)'},
+    '09':{codigo:'27-01-01-925',nombre:'UE 09 — 27-01-01-925',corto:'UE 09 (925)'}
+  };
+
+  // Determina la subunidad de un rubro según el tipo de nómina del PDF
+  function determinarSubunidad(rubro,tipoPdf,sufijoPdf){
+    // Permanente → UE 02
+    if(tipoPdf==='permanente') return '02';
+    // Temporal: depende del acuerdo
+    if(tipoPdf==='temporal'){
+      if(sufijoPdf==='TC'||sufijoPdf==='TD') return '02';
+      if(sufijoPdf==='TU') return '08';
+      if(sufijoPdf==='TT') return '08';
+    }
+    // Incapacidades → UE 02 por defecto
+    if(/^A-03-04/i.test(rubro)) return '02';
+    return '02'; // default
+  }
+
   // ─── Drag & drop + click ───
   if(dropZone){
     dropZone.addEventListener('click',()=>fileInput.click());
@@ -2513,22 +2541,38 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
       pdfsParsed.push({name:pdf.name,tipo:pdf.tipo,sufijo:pdf.sufijo,sit:pdf.sit||'',...parsed});
     });
 
-    // Paso 2: Agrupar conceptos por rubro SIIF
-    const rubroMap=new Map(); // rubro → {valor, conceptos, tipo}
+    // Paso 2: Agrupar conceptos por rubro SIIF + asignar subunidad
+    const rubroMap=new Map(); // rubro → {valor, conceptos, tipo, subunidades}
     pdfsParsed.forEach(pp=>{
       const agrupados=agruparPorRubro(pp.conceptos,pp.tipo);
+      const subUe=determinarSubunidad('',pp.tipo,pp.sufijo);
       agrupados.forEach(a=>{
         const key=a.rubro;
         if(rubroMap.has(key)){
           const e=rubroMap.get(key);
           e.valor+=a.valor;
           a.conceptosEfinomina.forEach(c=>{if(!e.conceptos.includes(c))e.conceptos.push(c);});
+          if(!e.subunidades.includes(subUe)) e.subunidades.push(subUe);
         }else{
-          rubroMap.set(key,{rubro:a.rubro,valor:a.valor,conceptos:[...a.conceptosEfinomina],descPdf:a.descripcionPdf,planta:clasificarPlanta(a.rubro)});
+          rubroMap.set(key,{rubro:a.rubro,valor:a.valor,conceptos:[...a.conceptosEfinomina],descPdf:a.descripcionPdf,planta:clasificarPlanta(a.rubro),subunidades:[subUe]});
         }
       });
     });
     const rubrosAgrupados=[...rubroMap.values()].sort((a,b)=>a.rubro.localeCompare(b.rubro));
+
+    // Populate Subunidad CC dropdown
+    const selSubCC=document.getElementById('nominaSubunidadCC');
+    const prevSubCC=selSubCC.value;
+    selSubCC.innerHTML='<option value="all">🏢 Todas las Subunidades</option>';
+    const subunidadesUsadas=new Set();
+    rubrosAgrupados.forEach(ra=>ra.subunidades.forEach(s=>subunidadesUsadas.add(s)));
+    [...subunidadesUsadas].sort().forEach(ueKey=>{
+      const info=SUBUNIDADES[ueKey]||{corto:'UE '+ueKey};
+      const opt=document.createElement('option');
+      opt.value=ueKey;opt.textContent=info.corto;
+      selSubCC.appendChild(opt);
+    });
+    if(prevSubCC&&[...selSubCC.options].some(o=>o.value===prevSubCC)) selSubCC.value=prevSubCC;
 
     // Build SIIF data by Sub UE
     const siifByUnit={};
@@ -2597,8 +2641,12 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
   function renderNominaComparison(){
     const {rubrosAgrupados,siifByUnit,pdfsParsed,loaded,allText}=nominaState;
     const filterUE=document.getElementById('nominaSubUE')?.value||'all';
+    const filterSubCC=document.getElementById('nominaSubunidadCC')?.value||'all';
     const filterSit=document.getElementById('nominaSitFondos')?.value||'all';
     const mesesAdic=parseInt(document.getElementById('nominaMeses')?.value||'3')||3;
+
+    // Filter rubrosAgrupados by subunidad CC
+    const rubrosFiltered=filterSubCC==='all'?rubrosAgrupados:rubrosAgrupados.filter(ra=>ra.subunidades.includes(filterSubCC));
 
     // Get SIIF rows for selected Sub UE, filtered by situación
     let siifRows;
@@ -2610,6 +2658,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     const infoEl=document.getElementById('nominaSubUEInfo');
     if(infoEl){
       let txt=filterUE==='all'?Object.keys(siifByUnit).length+' sub unidades':siifRows.length+' rubros';
+      if(filterSubCC!=='all'){const info=SUBUNIDADES[filterSubCC];txt+=' · '+(info?info.corto:'UE '+filterSubCC);}
       if(filterSit!=='all') txt+=' · '+filterSit;
       infoEl.textContent=txt;
     }
@@ -2641,7 +2690,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
 
     // ── Build comparison rows ──
     const compRows=[];
-    rubrosAgrupados.forEach(ra=>{
+    rubrosFiltered.forEach(ra=>{
       // Find matching SIIF rubro
       let siif=siifMap.get(ra.rubro);
       // Try partial match if exact not found
@@ -2674,6 +2723,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
         diff,margen,
         ...est,
         planta:ra.planta,
+        subunidades:ra.subunidades,
         matched:!!siif,
         costoMensual,necesidad,adicion
       });
@@ -2707,7 +2757,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
     tbody.innerHTML='';tfoot.innerHTML='';
 
     if(compRows.length===0){
-      tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--muted)">No se encontraron conceptos de INGRESOS en los PDFs. Revisa el texto extraído.</td></tr>';
+      tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:var(--muted)">No se encontraron conceptos de INGRESOS en los PDFs. Revisa el texto extraído.</td></tr>';
     }else{
       const groups=[
         {key:'permanente',label:'🏛 PLANTA PERMANENTE (A-01-01)',color:'#2980B9'},
@@ -2725,7 +2775,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
         const grpEst=estadoSuficiencia(grpDiff,grpNom);
         const htr=document.createElement('tr');
         htr.style.cssText='background:var(--sidebar-bg);color:#fff;font-weight:700;';
-        htr.innerHTML=`<td colspan="3" style="border-left:4px solid ${g.color};padding-left:12px;">${g.label}</td>
+        htr.innerHTML=`<td colspan="4" style="border-left:4px solid ${g.color};padding-left:12px;">${g.label}</td>
           <td class="num">${fmtF(grpCdp)}</td><td class="num">${fmtF(grpNom)}</td>
           <td class="num ${grpDiff>=0?'diff-pos':'diff-neg'}">${grpDiff>=0?'+':''}${fmtF(grpDiff)}</td>
           <td class="num">${grpNom>0?(grpDiff/grpNom*100).toFixed(1)+'%':'—'}</td>
@@ -2734,9 +2784,11 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
 
         gRows.forEach(r=>{
           const tr=document.createElement('tr');
+          const subBadges=r.subunidades.map(s=>{const info=SUBUNIDADES[s]||{corto:'UE '+s};return '<span style="padding:1px 5px;border-radius:3px;font-size:.65rem;font-weight:600;background:rgba(201,168,76,0.15);color:var(--gold);white-space:nowrap;">'+info.corto+'</span>';}).join(' ');
           tr.innerHTML=`
             <td style="font-size:.72rem;color:var(--muted)">${r.rubro}${!r.matched?' ⚠':''}</td>
             <td style="white-space:normal;min-width:120px;max-width:240px">${r.concepto||'—'}</td>
+            <td style="font-size:.75rem;">${subBadges}</td>
             <td style="font-size:.72rem;color:var(--accent);max-width:120px;white-space:normal">${r.conceptosEfinomina.join(', ')}</td>
             <td class="num">${r.cdpXComp>0?fmtF(r.cdpXComp):'—'}</td>
             <td class="num">${fmtF(r.valorNomina)}</td>
@@ -2749,7 +2801,7 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
 
       const totEst=estadoSuficiencia(totDiff,totNomina);
       tfoot.innerHTML=`<tr style="font-weight:700;background:var(--surface-alt)">
-        <td colspan="3">TOTAL GENERAL</td>
+        <td colspan="4">TOTAL GENERAL</td>
         <td class="num">${fmtF(totCdp)}</td><td class="num">${fmtF(totNomina)}</td>
         <td class="num ${totDiff>=0?'diff-pos':'diff-neg'}">${totDiff>=0?'+':''}${fmtF(totDiff)}</td>
         <td class="num">${totNomina>0?(totDiff/totNomina*100).toFixed(1)+'%':'—'}</td>
@@ -2830,8 +2882,8 @@ function mkTxt(text,x,y,attrs){const el=mkEl('text',{x,y,...attrs,'font-family':
       diagText+=`   Conceptos: ${pp.conceptos.map(c=>c.codigo+' = '+fmtF(c.valor)).join(', ')}\n`;
     });
     diagText+=`\n══ MAPEO RUBRO SIIF ══\n`;
-    rubrosAgrupados.forEach(ra=>{
-      diagText+=`${ra.rubro} ← [${ra.conceptos.join(', ')}] = ${fmtF(ra.valor)}\n`;
+    rubrosFiltered.forEach(ra=>{
+      diagText+=`${ra.rubro} [${ra.subunidades.map(s=>(SUBUNIDADES[s]||{corto:'UE '+s}).corto).join(', ')}] ← [${ra.conceptos.join(', ')}] = ${fmtF(ra.valor)}\n`;
     });
     diagText+=`\n══ SIIF CARGADO ══\n`;
     diagText+=`Rubros: ${siifRows.length}`;
