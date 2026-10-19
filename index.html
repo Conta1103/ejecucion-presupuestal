@@ -204,6 +204,17 @@ body.home-mode .content-scroll { padding-top: 0; }
   position: relative;
 }
 .nav-item:hover { background: var(--sidebar-hover); color: #fff; }
+.nav-item.nav-locked {
+  opacity: .35;
+  pointer-events: none;
+  position: relative;
+}
+.nav-item.nav-locked::after {
+  content: '🔒';
+  position: absolute;
+  right: 14px;
+  font-size: .65rem;
+}
 .nav-item.active {
   background: var(--sidebar-active);
   color: var(--gold);
@@ -1019,28 +1030,28 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 
   <nav class="sidebar-nav">
     <div class="nav-section">Navegación</div>
-    <button class="nav-item" onclick="document.body.classList.add('home-mode');navTo(document.querySelector('[data-section=dashboard]'))" style="opacity:.7;font-size:.78rem;">
+    <button class="nav-item" onclick="window.__goHome()" style="opacity:.7;font-size:.78rem;">
       <span class="nav-icon">🏠</span> Inicio
-    </button>
-    <button class="nav-item active" data-section="dashboard" onclick="navTo(this)">
-      <span class="nav-icon">📊</span> Dashboard
     </button>
     <button class="nav-item" data-section="archivos" onclick="navTo(this)">
       <span class="nav-icon">📁</span> Cargar Archivos
     </button>
-    <button class="nav-item" data-section="analisis" onclick="navTo(this)">
+    <button class="nav-item nav-locked" data-section="dashboard" data-requires-data onclick="navTo(this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </button>
+    <button class="nav-item nav-locked" data-section="analisis" data-requires-data onclick="navTo(this)">
       <span class="nav-icon">📈</span> Análisis Gráfico
     </button>
-    <button class="nav-item" data-section="pdf" onclick="navTo(this)">
+    <button class="nav-item nav-locked" data-section="pdf" data-requires-data onclick="navTo(this)">
       <span class="nav-icon">📄</span> Generar PDF
     </button>
-    <button class="nav-item" data-section="comparativo" onclick="navTo(this)">
+    <button class="nav-item nav-locked" data-section="comparativo" data-requires-data onclick="navTo(this)">
       <span class="nav-icon">🔄</span> Comparativo UE
     </button>
     <button class="nav-item" data-section="nomina" onclick="navTo(this)">
       <span class="nav-icon">💼</span> Nómina
     </button>
-    <button class="nav-item" data-section="auditoria" onclick="navTo(this)">
+    <button class="nav-item nav-locked" data-section="auditoria" data-requires-data onclick="navTo(this)">
       <span class="nav-icon">🔍</span> Auditoría
       <span class="nav-badge" id="alertCount">0</span>
     </button>
@@ -1594,6 +1605,7 @@ document.getElementById('topbarDate').textContent=new Date().toLocaleDateString(
 
 // ─── Navigation ───
 window.navTo=function(btn){
+  if(btn.classList.contains('nav-locked')) return;
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   btn.classList.add('active');
   const sec=btn.dataset.section;
@@ -1609,6 +1621,17 @@ window.navTo=function(btn){
 
 // Start in home mode
 document.body.classList.add('home-mode');
+
+window.__goHome=function(){
+  // Show welcome, re-lock nav if no data
+  document.body.classList.add('home-mode');
+  if(!unitFiles.some(Boolean)){
+    document.querySelectorAll('.nav-item[data-requires-data]').forEach(b=>b.classList.add('nav-locked'));
+  }
+  // Navigate to dashboard (which shows emptyState/welcome)
+  const db=document.querySelector('[data-section=dashboard]');
+  if(db) navTo(db);
+};
 
 // ─── Chart Tabs ───
 window.switchChart=function(btn){
@@ -1677,8 +1700,11 @@ function refreshAll(){
   document.getElementById('watermark').hidden=!ld.length;
   document.getElementById('btnPdf').disabled=!ld.length;
   document.getElementById('btnPdf2').disabled=!ld.length;
-  // Exit home mode when data is loaded
-  if(ld.length) document.body.classList.remove('home-mode');
+  // Exit home mode & unlock nav when data is loaded
+  if(ld.length){
+    document.body.classList.remove('home-mode');
+    document.querySelectorAll('.nav-item[data-requires-data]').forEach(b=>b.classList.remove('nav-locked'));
+  }
   if(!ld.length)return;
   document.getElementById('wmFecha').textContent=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
   buildUnitTabs();populateFilters();applyFilters();
