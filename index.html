@@ -119,6 +119,26 @@ body.home-mode .sidebar-toggle { display: none !important; }
 body.home-mode .main-wrap { margin-left: 0; }
 body.home-mode .topbar { display: none; }
 body.home-mode .content-scroll { padding-top: 0; }
+body.home-mode .welcome-modules { display: none; }
+
+.btn-back-home {
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 7px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--accent);
+  cursor: pointer;
+  transition: background .2s, color .2s;
+}
+.btn-back-home:hover {
+  background: var(--accent);
+  color: #fff;
+}
 
 /* ═══════ SIDEBAR ═══════ */
 .sidebar {
@@ -1326,6 +1346,7 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 
     <!-- ═══════ SECTION: CARGAR ARCHIVOS ═══════ -->
     <div class="section" id="sec-archivos">
+      <button class="btn-back-home" onclick="window.__goHome()">← Volver al inicio</button>
       <div class="card">
         <div class="card-header">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M14 10v3a1 1 0 01-1 1H3a1 1 0 01-1-1v-3M11 5L8 2 5 5M8 2v8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
