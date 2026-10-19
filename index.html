@@ -113,6 +113,13 @@ body {
   overflow: hidden;
 }
 
+/* ═══════ HOME MODE — oculta sidebar y topbar ═══════ */
+body.home-mode .sidebar,
+body.home-mode .sidebar-toggle { display: none !important; }
+body.home-mode .main-wrap { margin-left: 0; }
+body.home-mode .topbar { display: none; }
+body.home-mode .content-scroll { padding-top: 0; }
+
 /* ═══════ SIDEBAR ═══════ */
 .sidebar {
   width: var(--sidebar-w);
@@ -730,6 +737,27 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
   letter-spacing: 0.02em;
   margin-bottom: 12px;
 }
+.welcome-enter-btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 20px;
+  padding: 12px 32px;
+  background: linear-gradient(135deg, var(--gold), #E8D48B);
+  color: var(--sidebar-bg);
+  border: none;
+  border-radius: 8px;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  box-shadow: 0 4px 16px rgba(201,168,76,0.35);
+  transition: transform .2s, box-shadow .2s;
+}
+.welcome-enter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(201,168,76,0.45);
+}
 .welcome-desc {
   font-size: 0.84rem;
   color: rgba(168,196,216,0.85);
@@ -991,6 +1019,9 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
 
   <nav class="sidebar-nav">
     <div class="nav-section">Navegación</div>
+    <button class="nav-item" onclick="document.body.classList.add('home-mode');navTo(document.querySelector('[data-section=dashboard]'))" style="opacity:.7;font-size:.78rem;">
+      <span class="nav-icon">🏠</span> Inicio
+    </button>
     <button class="nav-item active" data-section="dashboard" onclick="navTo(this)">
       <span class="nav-icon">📊</span> Dashboard
     </button>
@@ -1061,6 +1092,9 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
             <h1 class="welcome-title">División Presupuestal</h1>
             <p class="welcome-subtitle">Dirección Seccional de Administración Judicial de Sincelejo</p>
             <p class="welcome-desc">Plataforma de análisis y control de ejecución presupuestal para las Unidades Ejecutoras de la Rama Judicial.</p>
+            <button class="welcome-enter-btn" onclick="document.body.classList.remove('home-mode');navTo(document.querySelector('[data-section=archivos]'))">
+              Ingresar al sistema <span style="margin-left:6px">→</span>
+            </button>
           </div>
         </div>
 
@@ -1565,9 +1599,16 @@ window.navTo=function(btn){
   const sec=btn.dataset.section;
   document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
   document.getElementById('sec-'+sec).classList.add('active');
+  // Home mode: show sidebar for all modules except dashboard-without-data
+  if(sec!=='dashboard') document.body.classList.remove('home-mode');
+  else if(!unitFiles.some(Boolean)) document.body.classList.add('home-mode');
+  else document.body.classList.remove('home-mode');
   // Close mobile sidebar
   document.querySelector('.sidebar').classList.remove('open');
 };
+
+// Start in home mode
+document.body.classList.add('home-mode');
 
 // ─── Chart Tabs ───
 window.switchChart=function(btn){
@@ -1636,6 +1677,8 @@ function refreshAll(){
   document.getElementById('watermark').hidden=!ld.length;
   document.getElementById('btnPdf').disabled=!ld.length;
   document.getElementById('btnPdf2').disabled=!ld.length;
+  // Exit home mode when data is loaded
+  if(ld.length) document.body.classList.remove('home-mode');
   if(!ld.length)return;
   document.getElementById('wmFecha').textContent=new Date().toLocaleDateString('es-CO',{year:'numeric',month:'long',day:'numeric'});
   buildUnitTabs();populateFilters();applyFilters();
