@@ -829,6 +829,22 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
   color: var(--fg);
   font-weight: 500;
 }
+.wf-value a {
+  color: var(--accent);
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(27,79,114,0.3);
+  transition: border-color .2s, color .2s;
+}
+.wf-value a:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+.wf-value a svg {
+  width: 11px; height: 11px;
+  vertical-align: -1px;
+  margin-left: 3px;
+  opacity: .5;
+}
 
 @media (max-width: 768px) {
   .welcome-hero-content { padding: 32px 20px 28px; }
@@ -1118,8 +1134,8 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
         <!-- ═══ FOOTER INFO ═══ -->
         <div class="welcome-footer-info">
           <div class="wf-item">
-            <span class="wf-label">Normativa</span>
-            <span class="wf-value">Resolución 036/2019 CGN · Guía 12 — Ejecución Presupuestal</span>
+            <span class="wf-label">Normativa base</span>
+            <span class="wf-value">Resolución 036/2019 CGN · Decreto 1068/2015 · EOP (Ley 2559/2025)</span>
           </div>
           <div class="wf-item">
             <span class="wf-label">Entidad</span>
@@ -1128,6 +1144,25 @@ tr.level-1:hover td { background: var(--row-l1-bg); }
           <div class="wf-item">
             <span class="wf-label">Vigencia</span>
             <span class="wf-value" id="welcomeVigencia">2026</span>
+          </div>
+        </div>
+
+        <!-- ═══ DOCUMENTACIÓN DE REFERENCIA ═══ -->
+        <div style="margin-top:16px;">
+          <p style="font-size:0.62rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin-bottom:8px;">Documentación de referencia</p>
+          <div class="welcome-footer-info">
+            <div class="wf-item">
+              <span class="wf-label">Guía Financiera No. 12</span>
+              <span class="wf-value"><a href="https://www.divri.gov.co/aym_image/files/Transparencia%20Acceso%20Informacion/Informacion%20Presupuestal%20y%20Financiera/Gu%C3%ADas%20Financieras%20MDN%202021/guia_financiera_no_12_ejecucion_presupuestal_del_gasto.pdf" target="_blank" rel="noopener">Ejecución Presupuestal del Gasto — SIIF Nación<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 2a.75.75 0 0 0 0 1.5h5.69L2.22 10.72a.75.75 0 1 0 1.06 1.06L10.5 4.56v5.69a.75.75 0 0 0 1.5 0V2H3.75Z"/></svg></a></span>
+            </div>
+            <div class="wf-item">
+              <span class="wf-label">Portal SIIF Nación</span>
+              <span class="wf-value"><a href="https://www.minhacienda.gov.co/siif/siif-nacion/capacitacion" target="_blank" rel="noopener">Capacitación y guías — MinHacienda<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 2a.75.75 0 0 0 0 1.5h5.69L2.22 10.72a.75.75 0 1 0 1.06 1.06L10.5 4.56v5.69a.75.75 0 0 0 1.5 0V2H3.75Z"/></svg></a></span>
+            </div>
+            <div class="wf-item">
+              <span class="wf-label">Información General SIIF</span>
+              <span class="wf-value"><a href="https://www.minhacienda.gov.co/siif/siif-nacion/informacion-general" target="_blank" rel="noopener">Portal SIIF Nación — MinHacienda<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor"><path d="M3.75 2a.75.75 0 0 0 0 1.5h5.69L2.22 10.72a.75.75 0 1 0 1.06 1.06L10.5 4.56v5.69a.75.75 0 0 0 1.5 0V2H3.75Z"/></svg></a></span>
+            </div>
           </div>
         </div>
       </div>
