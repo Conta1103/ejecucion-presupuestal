@@ -1644,14 +1644,17 @@ window.navTo=function(btn){
 document.body.classList.add('home-mode');
 
 window.__goHome=function(){
-  // Show welcome, re-lock nav if no data
+  // Switch to dashboard section directly (bypass nav-locked check)
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById('sec-dashboard').classList.add('active');
+  // Activate home mode
   document.body.classList.add('home-mode');
+  // Re-lock nav if no data
   if(!unitFiles.some(Boolean)){
     document.querySelectorAll('.nav-item[data-requires-data]').forEach(b=>b.classList.add('nav-locked'));
   }
-  // Navigate to dashboard (which shows emptyState/welcome)
-  const db=document.querySelector('[data-section=dashboard]');
-  if(db) navTo(db);
+  document.querySelector('.sidebar').classList.remove('open');
 };
 
 // ─── Chart Tabs ───
